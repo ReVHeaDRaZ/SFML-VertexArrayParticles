@@ -1,7 +1,10 @@
 #include <stdlib.h>
 #include <vector>
 
-#define MAX_NUM_PARTICLES 300000 //Maximum number of particles that can exist
+#define MAX_NUM_PARTICLES 300000	  //Maximum number of particles that can exist
+#define ANGLE_UP (M_PI / 2.0f)		  //straight up (90deg)
+#define FOUNTAIN_WIDTH (M_PI / 12.0f) //fountain width in radians (pi/12 is 15../deg)
+
 extern uint numParticles;
 extern bool fountain;
 sf::Texture spriteTexture;
@@ -27,6 +30,7 @@ private:
 	sf::RenderWindow& windowref;
 	float gravity = 0.07;
 	float angle;
+	float init_v;
 
 public:
 	uint8_t lifetime;
@@ -46,15 +50,14 @@ public:
 	{
 		x = posx;
 		y = posy;
-		angle = RandomNumber(0.f, 6.2831853f);
 
 		if (fountain)
 		{
-			yv = RandomNumber(1.f, 8.f) * -1;
-			xv = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
+			angle = RandomNumber(ANGLE_UP - FOUNTAIN_WIDTH / 2.0f, ANGLE_UP + FOUNTAIN_WIDTH / 2.0f);
+			init_v = RandomNumber(1.f, 8.f);
+			yv = 0 - sin(angle) * init_v;
+			xv = cos(angle) * init_v;
 
-			//yv = abs((sin(angle)*yv))*-1;  // Have disabled for now :(
-			//xv = cos(angle)*yv;
 			r = rand() % 255;
 			gb = rand() % 255;
 		}
@@ -71,7 +74,7 @@ public:
 		lifetime = rand();
 		active = true;
 
-		color = sf::Color(r, lifetime/2, gb, lifetime);
+		color = sf::Color(r, lifetime / 2, gb, lifetime);
 	}
 
 	void ApplyForce()
@@ -110,7 +113,6 @@ public:
 			return 0;
 		}
 	}
-
 };
 
 std::vector<Particle> particles;
