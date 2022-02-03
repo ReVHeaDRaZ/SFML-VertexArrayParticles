@@ -70,7 +70,7 @@ int main()
 				if(event.key.code == sf::Keyboard::Key::Up)
 				{
 					numParticles+=10;
-					if(numParticles>3000) numParticles=3000;
+					if(numParticles>8000) numParticles=8000;
 				}
 				if(event.key.code == sf::Keyboard::Key::Down)
 				{

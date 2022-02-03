@@ -1,7 +1,8 @@
 #include <stdlib.h>
 #include <vector>
 
-#define MAX_NUM_PARTICLES 300000	  //Maximum number of particles that can exist
+#define M_PI 3.14159265358979323846
+#define MAX_NUM_PARTICLES 1000000	  //Maximum number of particles that can exist
 #define ANGLE_UP (M_PI / 2.0f)		  //straight up (90deg)
 #define FOUNTAIN_WIDTH (M_PI / 12.0f) //fountain width in radians (pi/12 is 15../deg)
 
@@ -54,7 +55,7 @@ public:
 		if (fountain)
 		{
 			angle = RandomNumber(ANGLE_UP - FOUNTAIN_WIDTH / 2.0f, ANGLE_UP + FOUNTAIN_WIDTH / 2.0f);
-			init_v = RandomNumber(1.f, 8.f);
+			init_v = RandomNumber(2.5f, 8.f);
 			yv = 0 - sin(angle) * init_v;
 			xv = cos(angle) * init_v;
 
