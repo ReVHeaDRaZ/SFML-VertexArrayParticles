@@ -87,7 +87,7 @@ int main()
 
 		window.clear(sf::Color::Black);
 
-		emitter.Update();
+		emitter.Update(sf::Vector2f(mousePos.x, mousePos.y));
 		window.draw(vertexarray,renderstate);
 		circle.setPosition(mousePos.x, mousePos.y);
 		window.draw(circle, sf::BlendAdd);

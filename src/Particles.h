@@ -9,9 +9,15 @@
 extern uint numParticles;
 extern bool fountain;
 sf::Texture spriteTexture;
+float gravity = 0.07;
 
-float RandomNumber(float Min, float Max);
 bool LoadTexture();
+float RandomNumber(float Min, float Max);
+float ReMap(float value, float istart, float istop, float ostart, float ostop);
+float GetMagnitude(sf::Vector2f vector);
+sf::Vector2f Normalize(sf::Vector2f vector);
+sf::Vector2f SetMagnitude(sf::Vector2f vector, float mag);
+sf::Vector2f ScaleVector(sf::Vector2f vector, float scale);
 
 bool LoadTexture()
 {
@@ -25,18 +31,52 @@ float RandomNumber(float Min, float Max)
 	return (Min + (float(rand()) / float(RAND_MAX)) * (Max - Min));
 }
 
+float GetMagnitude(sf::Vector2f vector)
+{
+	float mag = (vector.x * vector.x) + (vector.y * vector.y);
+	mag = sqrt(mag);
+	return mag;
+}
+
+sf::Vector2f Normalize(sf::Vector2f vector)
+{
+	float mag = GetMagnitude(vector);
+	return sf::Vector2f(vector.x / mag, vector.y / mag);
+}
+
+sf::Vector2f SetMagnitude(sf::Vector2f vector, float mag)
+{
+	sf::Vector2f normalized = Normalize(vector);
+	return sf::Vector2f(normalized.x * mag, normalized.y * mag);
+}
+
+sf::Vector2f ScaleVector(sf::Vector2f vector, float scale)
+{
+	return sf::Vector2f(vector.x * scale, vector.y * scale);
+}
+
+float ReMap(float value, float istart, float istop, float ostart, float ostop)
+{
+	return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+}
+
 class Particle
 {
 private:
 	sf::RenderWindow& windowref;
-	float gravity = 0.07;
+
 	float angle;
 	float init_v;
+	float maxSpeed = 20.f;
+	float maxForce = 0.1f;
+	sf::Vector2f accel;
 
 public:
 	uint8_t lifetime;
 	float x, y;
 	float xv, yv;
+	sf::Vector2f target;
+
 	bool active = false;
 	uint8_t r = 255;
 	uint8_t gb;
@@ -78,14 +118,80 @@ public:
 		color = sf::Color(r, lifetime / 2, gb, lifetime);
 	}
 
-	void ApplyForce()
+	// --------------------------STEERING BEHAVIOURS-------------------------------------
+	void AddForce(sf::Vector2f force)
 	{
-		yv += gravity;
-		x += xv;
-		y += yv;
+		this->accel += force;
 	}
 
-	bool Update()
+	sf::Vector2f Arrive(sf::Vector2f target)
+	{
+		sf::Vector2f steer = sf::Vector2f(0.f, 0.f);
+		sf::Vector2f position = sf::Vector2f(this->x, this->y);
+		float attractDist = 250.f;
+		float slowDownDist = 100.f;
+
+		// Subtract location from target then normalize and multiply by maxSpeed
+		sf::Vector2f desired = target - position;
+		float dist = GetMagnitude(desired);
+
+		// Slowdown when distance less than slowDownDist
+		if (dist < slowDownDist)
+		{
+			float m = ReMap(dist, 0.f, slowDownDist, 0.f, maxSpeed);
+			desired = SetMagnitude(desired, m);
+		}
+		else
+		{
+			desired = SetMagnitude(desired, maxSpeed);
+		}
+
+		// Ignore if distance greater than attractDist
+		if (dist < attractDist)
+		{
+			steer = desired - sf::Vector2f(xv, yv);
+			// LIMIT maxForce
+			if (GetMagnitude(steer) > maxForce)
+				steer = SetMagnitude(steer, maxForce);
+		}
+		return steer;
+	}
+
+	void ApplyBehaviours()
+	{
+		//sf::Vector2f arriveForce = Arrive(target);
+		sf::Vector2f test = sf::Vector2f(0.2f,0.f);
+
+		// NEED TO ADD WEIGHTING
+		AddForce(test); // Test
+
+		//AddForce(arriveForce);
+	}
+
+	void ApplyForce()
+	{
+		ApplyBehaviours();
+		AddForce(sf::Vector2f(0.f,gravity));
+
+		// Add Acceleration
+		sf::Vector2f velocity = sf::Vector2f(xv + accel.x, yv + accel.y);
+
+		// LIMIT to maxSpeed
+		if (GetMagnitude(velocity) > maxSpeed)
+			velocity = SetMagnitude(velocity, maxSpeed);
+
+		// Reset Acceleration
+		accel.x = 0;
+		accel.y = 0;
+
+		// Update position
+		x += velocity.x;
+		y += velocity.y;
+		xv = velocity.x;
+		yv = velocity.y;
+	}
+
+	bool Update(sf::Vector2f seektarget)
 	{
 		if (x < 0)
 		{
@@ -102,6 +208,7 @@ public:
 
 		if (this->lifetime > 5)
 		{
+			this->target = seektarget;
 			ApplyForce();
 			color = sf::Color(r, lifetime / 2, gb, lifetime);
 			this->lifetime -= 1;
@@ -164,13 +271,13 @@ public:
 		}
 	}
 
-	void Update()
+	void Update(sf::Vector2f seektarget)
 	{
 		for (uint i = 0; i < particles.size(); i++)
 		{
 			if (particles[i].active)
 			{
-				if (particles[i].Update())
+				if (particles[i].Update(seektarget))
 				{
 					vertexarray[i].position = sf::Vector2f(particles[i].x, particles[i].y);
 					vertexarray[i].color = particles[i].color;
