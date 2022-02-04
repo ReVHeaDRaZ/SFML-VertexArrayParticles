@@ -11,7 +11,8 @@ int count = 0;
 bool emitParticles = false; 	// To control emitting with mousebutton
 uint numParticles = 150; 		// Number of Particles to emit every frame
 bool fountain = false; 			// Emit fountain or standard particles
-bool seek = false;
+bool steerBehaviour = false;
+bool seekOrArrive = false;		// For behaviour selection 0 - seek, 1 - arrive
 
 int main()
 {
@@ -59,18 +60,17 @@ int main()
 				fountain = !fountain;
 
 			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Middle)
-				seek = true;
+				steerBehaviour = true;
 			if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Button::Middle)
-				seek = false;
+				steerBehaviour = false;
 
 			if (event.type == sf::Event::KeyPressed)
 			{
 				if(event.key.code == sf::Keyboard::Key::Escape)
 					window.close();
-				if(event.key.code == sf::Keyboard::Key::I)
+				if(event.key.code == sf::Keyboard::Key::B)
 				{
-					std::cout << particles.size() << std::endl;
-					std::cout << frames << std::endl;
+					seekOrArrive = !seekOrArrive;
 				}
 				if(event.key.code == sf::Keyboard::Key::Up)
 				{

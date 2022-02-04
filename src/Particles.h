@@ -8,7 +8,8 @@
 
 extern uint numParticles;
 extern bool fountain;
-extern bool seek;
+extern bool steerBehaviour;
+extern bool seekOrArrive;
 sf::Texture spriteTexture;
 float gravity = 0.07;
 sf::Vector2f wind = sf::Vector2f(0.f,0.f);
@@ -43,6 +44,8 @@ float GetMagnitude(sf::Vector2f vector)
 sf::Vector2f Normalize(sf::Vector2f vector)
 {
 	float mag = GetMagnitude(vector);
+	if(mag==0)
+		return sf::Vector2f(0.f,0.f);
 	return sf::Vector2f(vector.x / mag, vector.y / mag);
 }
 
@@ -76,7 +79,6 @@ private:
 public:
 	uint8_t lifetime;
 	float x, y;
-	float xv, yv;
 	sf::Vector2f velocity;
 
 	bool active = false;
@@ -146,10 +148,10 @@ public:
 
 	sf::Vector2f Arrive(sf::Vector2f arrivetarget)
 	{
-		sf::Vector2f steer = sf::Vector2f(0.f, 0.f);
+		sf::Vector2f steer 	= sf::Vector2f(0.f, 0.f);
 		sf::Vector2f position = sf::Vector2f(this->x, this->y);
-		float attractDist = 250.f;
-		float slowDownDist = 100.f;
+		float attractDist 	= 250.f;
+		float slowDownDist 	= 100.f;
 
 		// Subtract location from target then normalize and multiply by maxSpeed
 		sf::Vector2f desired = arrivetarget - position;
@@ -169,7 +171,7 @@ public:
 		// Ignore if distance greater than attractDist
 		if (dist < attractDist)
 		{
-			steer = desired - sf::Vector2f(xv, yv);
+			steer = desired - sf::Vector2f(velocity.x, velocity.y);
 			// LIMIT maxForce
 			if (GetMagnitude(steer) > maxForce)
 				steer = SetMagnitude(steer, maxForce);
@@ -179,12 +181,20 @@ public:
 
 	void ApplyBehaviours()
 	{
-		//sf::Vector2f seekForce = Seek(target);
-		sf::Vector2f arriveForce = Arrive(target);
+		if(steerBehaviour)
+		{
+			if(seekOrArrive)
+			{
+				sf::Vector2f seekForce = Seek(target);
+				AddForce(seekForce);
+			}
+			else{
+				sf::Vector2f arriveForce = Arrive(target);
+				AddForce(arriveForce);
+			}
+
 		// NEED TO ADD WEIGHTING
-		//AddForce(arriveForce);
-		if(seek)
-			AddForce(arriveForce);
+		}
 	}
 
 	void ApplyForces()
@@ -230,7 +240,7 @@ public:
 			this->target = seektarget;
 			ApplyForces();
 			color = sf::Color(r, lifetime / 2, gb, lifetime);
-			if(!seek)
+			if(!steerBehaviour)
 				this->lifetime -= 1;
 			return 1;
 		}

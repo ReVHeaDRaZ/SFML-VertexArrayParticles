@@ -31,8 +31,8 @@ void InitHud(){
 	instructions.setString("MMB- Seek     UPnDWN- ParticleAmount");
 	instructions.setPosition(winW-300,40);
 
-	instructions2.setString("LEFTnRIGHT- WindAmount");
-	instructions2.setPosition(winW-190,70);
+	instructions2.setString("B- ChangeBehaviour    LEFTnRIGHT- WindAmount");
+	instructions2.setPosition(winW-340,70);
 
 	pMax.setString("0");
 	pMax.setPosition(20,30);
