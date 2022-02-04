@@ -11,7 +11,8 @@ int count = 0;
 bool emitParticles = false; 	// To control emitting with mousebutton
 uint numParticles = 150; 		// Number of Particles to emit every frame
 bool fountain = false; 			// Emit fountain or standard particles
-
+bool steerBehaviour = false;
+bool seekOrArrive = false;		// For behaviour selection 0 - seek, 1 - arrive
 
 int main()
 {
@@ -58,14 +59,18 @@ int main()
 			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Right)
 				fountain = !fountain;
 
+			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Middle)
+				steerBehaviour = true;
+			if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Button::Middle)
+				steerBehaviour = false;
+
 			if (event.type == sf::Event::KeyPressed)
 			{
 				if(event.key.code == sf::Keyboard::Key::Escape)
 					window.close();
-				if(event.key.code == sf::Keyboard::Key::I)
+				if(event.key.code == sf::Keyboard::Key::B)
 				{
-					std::cout << particles.size() << std::endl;
-					std::cout << frames << std::endl;
+					seekOrArrive = !seekOrArrive;
 				}
 				if(event.key.code == sf::Keyboard::Key::Up)
 				{
@@ -77,17 +82,27 @@ int main()
 					numParticles-=10;
 					if(numParticles < 1) numParticles = 1;
 				}
+				if(event.key.code == sf::Keyboard::Key::Left)
+				{
+					wind.x = wind.x - 0.005f;
+					if(wind.x < -0.1) wind.x = -0.1f;
+				}
+				if(event.key.code == sf::Keyboard::Key::Right)
+				{
+					wind.x = wind.x + 0.005f;
+					if(wind.x > 0.1) wind.x = 0.1f;
+				}
 			}
 		}
 
 		mousePos = sf::Mouse::getPosition(window);
-		if(emitParticles) emitter.Init(mousePos.x, mousePos.y);
+		if(emitParticles) emitter.Emit(mousePos.x, mousePos.y);
 
 
 
 		window.clear(sf::Color::Black);
 
-		emitter.Update();
+		emitter.Update(sf::Vector2f(mousePos.x, mousePos.y));
 		window.draw(vertexarray,renderstate);
 		circle.setPosition(mousePos.x, mousePos.y);
 		window.draw(circle, sf::BlendAdd);

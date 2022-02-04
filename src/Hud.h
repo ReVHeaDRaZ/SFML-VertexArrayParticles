@@ -1,6 +1,8 @@
 #pragma once
 
-sf::Text heading,pMax,pEmit,pFrames;
+extern const float winW;
+extern const float winH;
+sf::Text heading,pMax,pEmit,pFrames, instructions, instructions2;
 sf::Font font;
 
 template <typename T>
@@ -19,11 +21,19 @@ void InitHud(){
 	heading.setCharacterSize(20);
 	heading.setFillColor(sf::Color::White);
 	heading.setPosition(10,10);
-	pMax = heading;
-	pEmit = heading;
-	pFrames = heading;
+	pMax 			= heading;
+	pEmit 			= heading;
+	pFrames 		= heading;
+	instructions 	= heading;
+	instructions2 	= heading;
+	heading.setString("MaxParticles     ParticlesEmittedPerFrame     FPS                                                       LMB- EMIT Particles   RMB- FOUNTAINorOMNI");
 
-	heading.setString("MaxParticles     ParticlesEmittedPerFrame     FPS                           LMB- EMIT Particles   RMB- FOUNTAINorOMNI   UPnDWN- ParticleAmount");
+	instructions.setString("MMB- Seek     UPnDWN- ParticleAmount");
+	instructions.setPosition(winW-300,40);
+
+	instructions2.setString("B- ChangeBehaviour    LEFTnRIGHT- WindAmount");
+	instructions2.setPosition(winW-340,70);
+
 	pMax.setString("0");
 	pMax.setPosition(20,30);
 
@@ -43,6 +53,8 @@ void InitHud(){
 
 void DrawHud(sf::RenderWindow* win){
 	win->draw(heading);
+	win->draw(instructions);
+	win->draw(instructions2);
 	win->draw(pMax);
 	win->draw(pEmit);
 	win->draw(pFrames);
