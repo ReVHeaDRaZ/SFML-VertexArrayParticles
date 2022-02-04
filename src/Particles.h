@@ -8,8 +8,10 @@
 
 extern uint numParticles;
 extern bool fountain;
+extern bool seek;
 sf::Texture spriteTexture;
 float gravity = 0.07;
+sf::Vector2f wind = sf::Vector2f(0.f,0.f);
 
 bool LoadTexture();
 float RandomNumber(float Min, float Max);
@@ -68,19 +70,20 @@ private:
 	float angle;
 	float init_v;
 	float maxSpeed = 20.f;
-	float maxForce = 0.1f;
+	float maxForce = 0.2f;
 	sf::Vector2f accel;
 
 public:
 	uint8_t lifetime;
 	float x, y;
 	float xv, yv;
-	sf::Vector2f target;
+	sf::Vector2f velocity;
 
 	bool active = false;
 	uint8_t r = 255;
 	uint8_t gb;
 	sf::Color color;
+	sf::Vector2f target;
 
 	Particle(sf::RenderWindow& window) :
 		windowref(window)
@@ -96,8 +99,8 @@ public:
 		{
 			angle = RandomNumber(ANGLE_UP - FOUNTAIN_WIDTH / 2.0f, ANGLE_UP + FOUNTAIN_WIDTH / 2.0f);
 			init_v = RandomNumber(2.5f, 8.f);
-			yv = 0 - sin(angle) * init_v;
-			xv = cos(angle) * init_v;
+			velocity.y = 0 - sin(angle) * init_v;
+			velocity.x = cos(angle) * init_v;
 
 			r = rand() % 255;
 			gb = rand() % 255;
@@ -105,8 +108,8 @@ public:
 
 		else
 		{
-			xv = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
-			yv = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
+			velocity.x = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
+			velocity.y = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
 
 			r = 255;
 			gb = rand() % 50;
@@ -124,7 +127,24 @@ public:
 		this->accel += force;
 	}
 
-	sf::Vector2f Arrive(sf::Vector2f target)
+	sf::Vector2f Seek(sf::Vector2f seektarget)
+	{
+		sf::Vector2f steer = sf::Vector2f(0.f, 0.f);
+		sf::Vector2f position = sf::Vector2f(this->x, this->y);
+		//float attractDist = 250.f;
+
+		// Subtract location from target then normalize and multiply by maxSpeed
+		sf::Vector2f desired = seektarget - position;
+		desired = SetMagnitude(desired, maxSpeed);
+
+		steer = desired - velocity;
+		if(GetMagnitude(steer) > maxForce)
+			steer = SetMagnitude(steer, maxForce);
+
+		return steer;
+	}
+
+	sf::Vector2f Arrive(sf::Vector2f arrivetarget)
 	{
 		sf::Vector2f steer = sf::Vector2f(0.f, 0.f);
 		sf::Vector2f position = sf::Vector2f(this->x, this->y);
@@ -132,7 +152,7 @@ public:
 		float slowDownDist = 100.f;
 
 		// Subtract location from target then normalize and multiply by maxSpeed
-		sf::Vector2f desired = target - position;
+		sf::Vector2f desired = arrivetarget - position;
 		float dist = GetMagnitude(desired);
 
 		// Slowdown when distance less than slowDownDist
@@ -159,22 +179,23 @@ public:
 
 	void ApplyBehaviours()
 	{
-		//sf::Vector2f arriveForce = Arrive(target);
-		sf::Vector2f test = sf::Vector2f(0.2f,0.f);
-
+		//sf::Vector2f seekForce = Seek(target);
+		sf::Vector2f arriveForce = Arrive(target);
 		// NEED TO ADD WEIGHTING
-		AddForce(test); // Test
-
 		//AddForce(arriveForce);
+		if(seek)
+			AddForce(arriveForce);
 	}
 
-	void ApplyForce()
+	void ApplyForces()
 	{
+		// Add Forces
 		ApplyBehaviours();
 		AddForce(sf::Vector2f(0.f,gravity));
+		AddForce(wind);
 
 		// Add Acceleration
-		sf::Vector2f velocity = sf::Vector2f(xv + accel.x, yv + accel.y);
+		velocity += accel;
 
 		// LIMIT to maxSpeed
 		if (GetMagnitude(velocity) > maxSpeed)
@@ -187,8 +208,6 @@ public:
 		// Update position
 		x += velocity.x;
 		y += velocity.y;
-		xv = velocity.x;
-		yv = velocity.y;
 	}
 
 	bool Update(sf::Vector2f seektarget)
@@ -209,9 +228,10 @@ public:
 		if (this->lifetime > 5)
 		{
 			this->target = seektarget;
-			ApplyForce();
+			ApplyForces();
 			color = sf::Color(r, lifetime / 2, gb, lifetime);
-			this->lifetime -= 1;
+			if(!seek)
+				this->lifetime -= 1;
 			return 1;
 		}
 		else
@@ -236,15 +256,15 @@ public:
 	Emitter(uint posx, uint posy, sf::RenderWindow& window) :
 		mywindow(window)
 	{
+		// Initialize Arrays
 		for (uint i = 0; i < MAX_NUM_PARTICLES; i++)
 		{
 			particles.push_back(Particle(mywindow));
-			//particles.back().Init(posx, posy);
 			vertexarray.append(sf::Vertex(sf::Vector2f(posx, posy), particles.back().color));
 		}
 	}
 
-	void Init(uint posx, uint posy)
+	void Emit(uint posx, uint posy)
 	{
 		for (uint i = 0; i < numParticles; i++)
 		{

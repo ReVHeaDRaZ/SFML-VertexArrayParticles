@@ -11,7 +11,7 @@ int count = 0;
 bool emitParticles = false; 	// To control emitting with mousebutton
 uint numParticles = 150; 		// Number of Particles to emit every frame
 bool fountain = false; 			// Emit fountain or standard particles
-
+bool seek = false;
 
 int main()
 {
@@ -58,6 +58,11 @@ int main()
 			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Right)
 				fountain = !fountain;
 
+			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Middle)
+				seek = true;
+			if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Button::Middle)
+				seek = false;
+
 			if (event.type == sf::Event::KeyPressed)
 			{
 				if(event.key.code == sf::Keyboard::Key::Escape)
@@ -77,11 +82,21 @@ int main()
 					numParticles-=10;
 					if(numParticles < 1) numParticles = 1;
 				}
+				if(event.key.code == sf::Keyboard::Key::Left)
+				{
+					wind.x = wind.x - 0.005f;
+					if(wind.x < -0.1) wind.x = -0.1f;
+				}
+				if(event.key.code == sf::Keyboard::Key::Right)
+				{
+					wind.x = wind.x + 0.005f;
+					if(wind.x > 0.1) wind.x = 0.1f;
+				}
 			}
 		}
 
 		mousePos = sf::Mouse::getPosition(window);
-		if(emitParticles) emitter.Init(mousePos.x, mousePos.y);
+		if(emitParticles) emitter.Emit(mousePos.x, mousePos.y);
 
 
 
