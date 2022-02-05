@@ -2,17 +2,17 @@
 #include "Platform/Platform.hpp"
 #include "Hud.h"
 
-const float winW = 1024;
+const float winW = 1024;		// Window Resolution
 const float winH = 768;
-sf::Vector2i mousePos;
+sf::Vector2i mousePos;			// Mouse Pointer
 uint8_t pointerRadius = 5;
-float frames;
-int count = 0;
+float frames;					// To store FramesPerSecond
+int count = 0;					// To count loops
+
+uint numParticles = 150; 		// To set Number of Particles to emit every frame
 bool emitParticles = false; 	// To control emitting with mousebutton
-uint numParticles = 150; 		// Number of Particles to emit every frame
-bool fountain = false; 			// Emit fountain or standard particles
-bool steerBehaviour = false;
-bool seekOrArrive = true;		// For behaviour selection 1 - seek, 0 - arrive
+bool steerBehaviour = false;	// To control steer behaviours on and off with mousebutton
+
 
 int main()
 {
@@ -48,34 +48,30 @@ int main()
 		{
 			if (event.type == sf::Event::Closed)
 				window.close();
-			// Mouse
+			// MOUSE Events
 			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left)
 				emitParticles = true;
 			if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Button::Left)
 				emitParticles = false;
 			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Middle)
-				fountain = !fountain;
+				SwitchParticleType();
 			// Apply behavior
 			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Right)
 				steerBehaviour = true;
 			if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Button::Right)
 				steerBehaviour = false;
-			// Keyboard
+			// KEYBOARD Events
 			if (event.type == sf::Event::KeyPressed)
 			{
 				if(event.key.code == sf::Keyboard::Key::Escape)
 					window.close();
 				if(event.key.code == sf::Keyboard::Key::B)
 				{
-					seekOrArrive = !seekOrArrive;
-					if(seekOrArrive)
-						behaviourtype.setString("Seek");
-					else
-						behaviourtype.setString("Arrive");
+					SwitchBehaviourType();
 				}
 				if(event.key.code == sf::Keyboard::Key::P)
 				{
-					fountain = !fountain;
+					SwitchParticleType();
 				}
 				// Change amount to emit
 				if(event.key.code == sf::Keyboard::Key::Up)

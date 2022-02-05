@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <vector>
+#include "Hud.h"
+#include "RazVectorTools.h"
 
 #define M_PI 3.14159265358979323846
 #define MAX_NUM_PARTICLES 1000000	  //Maximum number of particles that can exist
@@ -7,20 +9,20 @@
 #define FOUNTAIN_WIDTH (M_PI / 12.0f) //fountain width in radians (pi/12 is 15../deg)
 
 extern uint numParticles;
-extern bool fountain;
 extern bool steerBehaviour;
-extern bool seekOrArrive;
+
 sf::Texture spriteTexture;
 float gravity = 0.07;
 sf::Vector2f wind = sf::Vector2f(0.f,0.f);
 
+enum particleTypeEnum {SPARKS, FOUNTAIN, MAX_PARTICLETYPE};
+enum behaviourTypeEnum {SEEK, ARRIVE, MAX_BEHAVIOURTYPE};
+uint8_t particleType = SPARKS;
+uint8_t behaviourType = SEEK;
+
 bool LoadTexture();
-float RandomNumber(float Min, float Max);
-float ReMap(float value, float istart, float istop, float ostart, float ostop);
-float GetMagnitude(sf::Vector2f vector);
-sf::Vector2f Normalize(sf::Vector2f vector);
-sf::Vector2f SetMagnitude(sf::Vector2f vector, float mag);
-sf::Vector2f ScaleVector(sf::Vector2f vector, float scale);
+void SwitchBehaviourType();
+void SwitchParticleType();
 
 bool LoadTexture()
 {
@@ -29,40 +31,30 @@ bool LoadTexture()
 	return 1;
 }
 
-float RandomNumber(float Min, float Max)
+void SwitchBehaviourType()
 {
-	return (Min + (float(rand()) / float(RAND_MAX)) * (Max - Min));
+	behaviourType++;
+	if(behaviourType==MAX_BEHAVIOURTYPE)
+		behaviourType = 0;
+
+	switch(behaviourType)
+	{
+		case SEEK:
+			behaviourtypeHud.setString("SeeK");
+			break;
+		case ARRIVE:
+			behaviourtypeHud.setString("ArrivE");
+			break;
+		default :
+			behaviourheadingHud.setString("None");
+	}
 }
 
-float GetMagnitude(sf::Vector2f vector)
+void SwitchParticleType()
 {
-	float mag = (vector.x * vector.x) + (vector.y * vector.y);
-	mag = sqrt(mag);
-	return mag;
-}
-
-sf::Vector2f Normalize(sf::Vector2f vector)
-{
-	float mag = GetMagnitude(vector);
-	if(mag==0)
-		return sf::Vector2f(0.f,0.f);
-	return sf::Vector2f(vector.x / mag, vector.y / mag);
-}
-
-sf::Vector2f SetMagnitude(sf::Vector2f vector, float mag)
-{
-	sf::Vector2f normalized = Normalize(vector);
-	return sf::Vector2f(normalized.x * mag, normalized.y * mag);
-}
-
-sf::Vector2f ScaleVector(sf::Vector2f vector, float scale)
-{
-	return sf::Vector2f(vector.x * scale, vector.y * scale);
-}
-
-float ReMap(float value, float istart, float istop, float ostart, float ostop)
-{
-	return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+	particleType++;
+	if(particleType==MAX_PARTICLETYPE)
+		particleType = 0;
 }
 
 class Particle
@@ -75,6 +67,8 @@ private:
 	float maxSpeed = 20.f;
 	float maxForce = 0.2f;
 	sf::Vector2f accel;
+	sf::Vector2f seekForce;
+	sf::Vector2f arriveForce;
 
 public:
 	uint8_t lifetime;
@@ -98,31 +92,33 @@ public:
 		x = posx;
 		y = posy;
 
-		if (fountain)
+		switch(particleType)
 		{
-			angle = RandomNumber(ANGLE_UP - FOUNTAIN_WIDTH / 2.0f, ANGLE_UP + FOUNTAIN_WIDTH / 2.0f);
-			init_v = RandomNumber(2.5f, 8.f);
-			velocity.y = 0 - sin(angle) * init_v;
-			velocity.x = cos(angle) * init_v;
+			case FOUNTAIN:
+				angle = RandomNumber(ANGLE_UP - FOUNTAIN_WIDTH / 2.0f, ANGLE_UP + FOUNTAIN_WIDTH / 2.0f);
+				init_v = RandomNumber(2.5f, 8.f);
+				velocity.y = 0 - sin(angle) * init_v;
+				velocity.x = cos(angle) * init_v;
 
-			r = rand() % 255;
-			b = rand() % 255;
-			g = b;
-		}
+				r = rand() % 255;
+				b = rand() % 255;
+				g = b;
+				break;
 
-		else
-		{
-			velocity.x = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
-			velocity.y = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
+			case SPARKS:
+				velocity.x = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
+				velocity.y = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
 
-			r 	= 255;
-			b 	= rand() % 50;
-			g	= b;
+				r 	= 255;
+				b 	= rand() % 50;
+				g	= b;
+				break;
+			default:
+				break;
 		}
 
 		lifetime = rand();
 		active = true;
-
 		color = sf::Color(r, lifetime / 2, b, lifetime);
 	}
 
@@ -186,16 +182,19 @@ public:
 	{
 		if(steerBehaviour)
 		{
-			if(seekOrArrive)
+			switch(behaviourType)
 			{
-				sf::Vector2f seekForce = Seek(target);
-				AddForce(seekForce);
+				case SEEK:
+					seekForce = Seek(target);
+					AddForce(seekForce);
+					break;
+				case ARRIVE:
+					arriveForce = Arrive(target);
+					AddForce(arriveForce);
+					break;
+				default:
+					AddForce(sf::Vector2f(0.f,0.f));
 			}
-			else{
-				sf::Vector2f arriveForce = Arrive(target);
-				AddForce(arriveForce);
-			}
-
 		// NEED TO ADD WEIGHTING
 		}
 	}
@@ -264,6 +263,7 @@ class Emitter
 private:
 	sf::RenderWindow& mywindow;
 	uint lastParticleInitialized = 0;
+	bool maxxedOut = false;
 
 public:
 	Emitter(uint posx, uint posy, sf::RenderWindow& window) :

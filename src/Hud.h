@@ -2,7 +2,7 @@
 
 extern const float winW;
 extern const float winH;
-sf::Text heading,pMax,pEmit,pFrames, instructions, behaviourheading, behaviourtype;
+sf::Text heading,pMax,pEmit,pFrames, instructions, behaviourheadingHud, behaviourtypeHud;
 sf::Font font;
 
 template <typename T>
@@ -24,20 +24,20 @@ void InitHud(){
 	pMax 			= heading;
 	pEmit 			= heading;
 	pFrames 		= heading;
-	instructions 	= heading;
-	behaviourheading= heading;
-	behaviourtype	= heading;
+	instructions 		= heading;
+	behaviourheadingHud	= heading;
+	behaviourtypeHud	= heading;
 
 	heading.setString("MaxParticles     ParticlesEmittedPerFrame     FPS   ");
 
 	instructions.setString("LMB-          Emit Particles\nMMB or P-   Particle Type\nRMB-          Apply Behaviour\nUPnDWN-     ParticleAmount\nLEFTnRIGHT- Wind Amount\nB-             Change Behaviour");
 	instructions.setPosition(winW-220,20);
 
-	behaviourheading.setString("BehaviourType");
-	behaviourheading.setPosition(winW-100,winH-80);
+	behaviourheadingHud.setString("BehaviourType");
+	behaviourheadingHud.setPosition(winW-100,winH-80);
 
-	behaviourtype.setString("SeeK");
-	behaviourtype.setPosition(winW-70,winH-60);
+	behaviourtypeHud.setString("SeeK");
+	behaviourtypeHud.setPosition(winW-70,winH-60);
 
 	pMax.setString("0");
 	pMax.setPosition(20,30);
@@ -59,8 +59,8 @@ void InitHud(){
 void DrawHud(sf::RenderWindow* win){
 	win->draw(heading);
 	win->draw(instructions);
-	win->draw(behaviourheading);
-	win->draw(behaviourtype);
+	win->draw(behaviourheadingHud);
+	win->draw(behaviourtypeHud);
 	win->draw(pMax);
 	win->draw(pEmit);
 	win->draw(pFrames);
