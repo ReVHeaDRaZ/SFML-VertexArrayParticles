@@ -83,7 +83,8 @@ public:
 
 	bool active = false;
 	uint8_t r = 255;
-	uint8_t gb;
+	uint8_t g;
+	uint8_t b;
 	sf::Color color;
 	sf::Vector2f target;
 
@@ -105,7 +106,8 @@ public:
 			velocity.x = cos(angle) * init_v;
 
 			r = rand() % 255;
-			gb = rand() % 255;
+			b = rand() % 255;
+			g = b;
 		}
 
 		else
@@ -113,14 +115,15 @@ public:
 			velocity.x = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
 			velocity.y = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
 
-			r = 255;
-			gb = rand() % 50;
+			r 	= 255;
+			b 	= rand() % 50;
+			g	= b;
 		}
 
 		lifetime = rand();
 		active = true;
 
-		color = sf::Color(r, lifetime / 2, gb, lifetime);
+		color = sf::Color(r, lifetime / 2, b, lifetime);
 	}
 
 	// --------------------------STEERING BEHAVIOURS-------------------------------------
@@ -150,7 +153,7 @@ public:
 	{
 		sf::Vector2f steer 	= sf::Vector2f(0.f, 0.f);
 		sf::Vector2f position = sf::Vector2f(this->x, this->y);
-		float attractDist 	= 250.f;
+		float attractDist 	= 350.f;
 		float slowDownDist 	= 100.f;
 
 		// Subtract location from target then normalize and multiply by maxSpeed
@@ -239,7 +242,7 @@ public:
 		{
 			this->target = seektarget;
 			ApplyForces();
-			color = sf::Color(r, lifetime / 2, gb, lifetime);
+			color = sf::Color(r, lifetime / 2, b, lifetime);
 			if(!steerBehaviour)
 				this->lifetime -= 1;
 			return 1;
