@@ -12,20 +12,18 @@ bool emitParticles = false; 	// To control emitting with mousebutton
 uint numParticles = 150; 		// Number of Particles to emit every frame
 bool fountain = false; 			// Emit fountain or standard particles
 bool steerBehaviour = false;
-bool seekOrArrive = false;		// For behaviour selection 0 - seek, 1 - arrive
+bool seekOrArrive = true;		// For behaviour selection 1 - seek, 0 - arrive
 
 int main()
 {
-
 	sf::RenderWindow window;
 	window.create(sf::VideoMode(winW, winH), "RaZ Fountain");
 	window.setFramerateLimit(60);
 	window.setMouseCursorVisible(false);
 
-	LoadTexture();
+	LoadTexture();	// For Sprite use at a later date
 
 	sf::RenderStates renderstate(sf::BlendAdd);
-	//renderstate.texture = &spriteTexture;
 
 	// MousePointer
 	mousePos = sf::Mouse::getPosition(window);
@@ -42,7 +40,6 @@ int main()
 	sf::Clock clk;
 	clk.restart();
 
-
 	sf::Event event;
 
 	while (window.isOpen())
@@ -51,19 +48,19 @@ int main()
 		{
 			if (event.type == sf::Event::Closed)
 				window.close();
-
+			// Mouse
 			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left)
 				emitParticles = true;
 			if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Button::Left)
 				emitParticles = false;
-			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Right)
-				fountain = !fountain;
-
 			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Middle)
+				fountain = !fountain;
+			// Apply behavior
+			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Right)
 				steerBehaviour = true;
-			if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Button::Middle)
+			if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Button::Right)
 				steerBehaviour = false;
-
+			// Keyboard
 			if (event.type == sf::Event::KeyPressed)
 			{
 				if(event.key.code == sf::Keyboard::Key::Escape)
@@ -71,7 +68,16 @@ int main()
 				if(event.key.code == sf::Keyboard::Key::B)
 				{
 					seekOrArrive = !seekOrArrive;
+					if(seekOrArrive)
+						behaviourtype.setString("Seek");
+					else
+						behaviourtype.setString("Arrive");
 				}
+				if(event.key.code == sf::Keyboard::Key::P)
+				{
+					fountain = !fountain;
+				}
+				// Change amount to emit
 				if(event.key.code == sf::Keyboard::Key::Up)
 				{
 					numParticles+=10;
@@ -82,6 +88,7 @@ int main()
 					numParticles-=10;
 					if(numParticles < 1) numParticles = 1;
 				}
+				// Change Wind
 				if(event.key.code == sf::Keyboard::Key::Left)
 				{
 					wind.x = wind.x - 0.005f;
@@ -97,7 +104,6 @@ int main()
 
 		mousePos = sf::Mouse::getPosition(window);
 		if(emitParticles) emitter.Emit(mousePos.x, mousePos.y);
-
 
 
 		window.clear(sf::Color::Black);
