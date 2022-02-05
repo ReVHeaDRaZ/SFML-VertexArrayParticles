@@ -15,7 +15,7 @@ sf::Texture spriteTexture;
 float gravity = 0.07;
 sf::Vector2f wind = sf::Vector2f(0.f,0.f);
 
-enum particleTypeEnum {SPARKS, FOUNTAIN, MAX_PARTICLETYPE};
+enum particleTypeEnum {SPARKS, FOUNTAIN, SLIME, MAX_PARTICLETYPE};
 enum behaviourTypeEnum {SEEK, ARRIVE, MAX_BEHAVIOURTYPE};
 uint8_t particleType = SPARKS;
 uint8_t behaviourType = SEEK;
@@ -100,7 +100,7 @@ public:
 				velocity.y = 0 - sin(angle) * init_v;
 				velocity.x = cos(angle) * init_v;
 
-				r = rand() % 255;
+				r = rand() % 25;
 				b = rand() % 255;
 				g = b;
 				break;
@@ -112,6 +112,14 @@ public:
 				r 	= 255;
 				b 	= rand() % 50;
 				g	= b;
+				break;
+			case SLIME:
+				velocity.x = (RandomNumber(1.f, 4.5f)) - (RandomNumber(1.f, 4.5f));
+				velocity.y = (RandomNumber(0.5f, 1.5f)) - (RandomNumber(1.f, 2.5f));
+
+				r 	= 0;
+				b 	= rand() % 50;
+				g	= 255;
 				break;
 			default:
 				break;
