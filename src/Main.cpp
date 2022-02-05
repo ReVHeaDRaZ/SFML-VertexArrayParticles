@@ -52,7 +52,10 @@ int main()
 			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Left)
 				emitParticles = true;
 			if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Button::Left)
-				emitParticles = false;
+				{
+					emitParticles = false;
+					emitter.maxxedOut = false;
+				}
 			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Middle)
 				SwitchParticleType();
 			// Apply behavior
@@ -99,7 +102,7 @@ int main()
 		}
 
 		mousePos = sf::Mouse::getPosition(window);
-		if(emitParticles) emitter.Emit(mousePos.x, mousePos.y);
+		if(emitParticles && (!emitter.maxxedOut)) emitter.Emit(mousePos.x, mousePos.y);
 
 
 		window.clear(sf::Color::Black);

@@ -271,9 +271,12 @@ class Emitter
 private:
 	sf::RenderWindow& mywindow;
 	uint lastParticleInitialized = 0;
-	bool maxxedOut = false;
+	bool doFullSearch 	= false;  	// Set true when entire array has been searched for an inactive particle
+
 
 public:
+	bool maxxedOut 		= false;	// then set maxxedOut when can't find an inactive particle
+
 	Emitter(uint posx, uint posy, sf::RenderWindow& window) :
 		mywindow(window)
 	{
@@ -287,26 +290,34 @@ public:
 
 	void Emit(uint posx, uint posy)
 	{
-		for (uint i = 0; i < numParticles; i++)
+		if(!maxxedOut)
 		{
-			for (uint j = lastParticleInitialized; j < particles.size(); j++)
+			for (uint i = 0; i < numParticles; i++)
 			{
-				if (!particles[j].active)
+				for (uint j = lastParticleInitialized; j < particles.size(); j++)
 				{
-					particles[j].Init(posx, posy);
-					vertexarray[j].position.x = posx;
-					vertexarray[j].position.y = posy;
-					vertexarray[j].color = particles[j].color;
-					lastParticleInitialized = j;
-					break;
-				}
-				else if (j == (particles.size() - 1))
-				{
-					//particles.push_back(Particle(mywindow));
-					//particles.back().Init(posx, posy);
-					//vertexarray.append(sf::Vertex(sf::Vector2f(posx,posy),particles.back().color));
-					lastParticleInitialized = 0;
-					break;
+					if (!particles[j].active)
+					{
+						particles[j].Init(posx, posy);
+						vertexarray[j].position.x = posx;
+						vertexarray[j].position.y = posy;
+						vertexarray[j].color = particles[j].color;
+						lastParticleInitialized = j;
+						doFullSearch = false;
+						break;
+					}
+					else if (j == (particles.size() - 1))
+					{
+						if(doFullSearch)
+							{
+								lastParticleInitialized = particles.size()-2;
+								maxxedOut = true;
+							}
+							else
+							lastParticleInitialized = 0;
+						doFullSearch = true;
+						break;
+					}
 				}
 			}
 		}
