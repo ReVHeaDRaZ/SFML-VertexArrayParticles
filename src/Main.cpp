@@ -85,7 +85,7 @@ int main()
 				if(event.key.code == sf::Keyboard::Key::Down)
 				{
 					numParticles-=10;
-					if(numParticles < 1) numParticles = 1;
+					if(numParticles < 10) numParticles = 10;
 				}
 				// Change Wind
 				if(event.key.code == sf::Keyboard::Key::Left)
@@ -103,7 +103,6 @@ int main()
 
 		mousePos = sf::Mouse::getPosition(window);
 		if(emitParticles && (!emitter.maxxedOut)) emitter.Emit(mousePos.x, mousePos.y);
-
 
 		window.clear(sf::Color::Black);
 
