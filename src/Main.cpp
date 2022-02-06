@@ -63,6 +63,7 @@ int main()
 				steerBehaviour = true;
 			if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Button::Right)
 				steerBehaviour = false;
+
 			// KEYBOARD Events
 			if (event.type == sf::Event::KeyPressed)
 			{
@@ -98,6 +99,28 @@ int main()
 					wind.x = wind.x + 0.005f;
 					if(wind.x > 0.1) wind.x = 0.1f;
 				}
+				// Change maxSpeed
+				if(event.key.code == sf::Keyboard::Key::PageUp)
+				{
+					maxSpeed += 0.5f;
+					if(maxSpeed > 40.f) maxSpeed = 40.f;
+				}
+				if(event.key.code == sf::Keyboard::Key::PageDown)
+				{
+					maxSpeed -= 0.5f;
+					if(maxSpeed < 1.f) maxSpeed = 1.f;
+				}
+				// Change maxForce
+				if(event.key.code == sf::Keyboard::Key::Home)
+				{
+					maxForce += 0.05f;
+					if(maxForce > 1.f) maxForce = 1.f;
+				}
+				if(event.key.code == sf::Keyboard::Key::End)
+				{
+					maxForce -= 0.05f;
+					if(maxForce < 0.05f) maxForce = 0.05f;
+				}
 			}
 		}
 
@@ -118,12 +141,19 @@ int main()
 		frames = 1.f / clk.getElapsedTime().asSeconds();
 		clk.restart();
 
+		// Update Hud values
 		count++;
 		if(count>=40)
 		{
+			if(emitter.maxxedOut)
+				pMax.setFillColor(sf::Color::Red);
+			else pMax.setFillColor(sf::Color::White);
+
 			pMax.setString(to_string(particles.size()));
 			pEmit.setString(to_string(numParticles));
 			pFrames.setString(to_string(frames));
+			pForce.setString(to_string(maxForce));
+			pSpeed.setString(to_string(maxSpeed));
 			count=0;
 		}
 	}

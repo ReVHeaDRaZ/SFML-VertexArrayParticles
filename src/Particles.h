@@ -11,8 +11,9 @@
 extern uint numParticles;
 extern bool steerBehaviour;
 
-sf::Texture spriteTexture;
 float gravity = 0.07;
+float maxSpeed = 20.f;
+float maxForce = 0.2f;
 sf::Vector2f wind = sf::Vector2f(0.f,0.f);
 
 enum particleTypeEnum {SPARKS, FOUNTAIN, SLIME, MAX_PARTICLETYPE};
@@ -20,6 +21,7 @@ enum behaviourTypeEnum {SEEK, ARRIVE, MAX_BEHAVIOURTYPE};
 uint8_t particleType = SPARKS;
 uint8_t behaviourType = SEEK;
 
+sf::Texture spriteTexture;
 bool LoadTexture();
 void SwitchBehaviourType();
 void SwitchParticleType();
@@ -64,8 +66,6 @@ private:
 
 	float angle;
 	float init_v;
-	float maxSpeed = 20.f;
-	float maxForce = 0.2f;
 	sf::Vector2f accel;
 	sf::Vector2f seekForce;
 	sf::Vector2f arriveForce;
