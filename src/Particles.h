@@ -103,7 +103,7 @@ public:
 				particleSize = RandomNumber(1.f,7.f);
 				r = rand() % 25;
 				b = rand() % 255;
-				g = b;
+				g = r;
 				lifetime = rand();
 				break;
 
@@ -114,27 +114,28 @@ public:
 				particleSize = RandomNumber(1.f,8.f);
 				r 	= 255;
 				b 	= rand() % 50;
-				g	= b;
+				g	= 1+rand()%150;
 				lifetime = 1+ rand() % 200;
 				break;
 			case SLIME:
 				gravity = 0.1f;
 				velocity.x = (RandomNumber(1.f, 4.5f)) - (RandomNumber(1.f, 4.5f));
 				velocity.y = (RandomNumber(0.5f, 1.5f)) - (RandomNumber(1.f, 2.5f));
-				particleSize = RandomNumber(1.f,20.f);
+				particleSize = RandomNumber(1.f,15.f);
 				r 	= 0;
-				b 	= rand() % 50;
-				g	= 255;
+				b 	= rand() % 20;
+				g	= 10 + rand() % 90;
 				lifetime = rand();
 				break;
 			case FIRE:
 				gravity = 0.f;
+				x+=RandomNumber(-5.f,5.f);
 				velocity.x = (RandomNumber(0.f, 0.5f)) - (RandomNumber(0.f, 0.5f));
 				velocity.y = 0.f - (RandomNumber(2.5f, 5.5f));
 				particleSize = RandomNumber(2.f,20.f);
 				r 	= 255;
 				b 	= rand() % 50;
-				g	= b;
+				g	= rand();
 				lifetime = 1 + rand() % 80;
 				break;
 			default:
@@ -143,7 +144,7 @@ public:
 
 
 		active = true;
-		color = sf::Color(r, lifetime / 2, b, lifetime);
+		color = sf::Color(r, g, b, lifetime);
 	}
 
 	// --------------------------STEERING BEHAVIOURS-------------------------------------
@@ -265,7 +266,7 @@ public:
 		{
 			this->target = seektarget;
 			ApplyForces();
-			color = sf::Color(r, lifetime / 2, b, lifetime);
+			color = sf::Color(r, g, b, lifetime);
 			if(!steerBehaviour)
 				this->lifetime -= 1;
 			return 1;
@@ -319,19 +320,19 @@ public:
 					{
 						particles[j].Init(posx, posy);
 
-							vertexarray[j*4].position.x = posx;
+							vertexarray[j*4].position.x = posx-particles[j].particleSize/2;
 							vertexarray[j*4].position.y = posy;
 							vertexarray[j*4].color = particles[j].color;
 
-							vertexarray[j*4+1].position.x = posx + particles[j].particleSize;
+							vertexarray[j*4+1].position.x = posx + particles[j].particleSize/2;
 							vertexarray[j*4+1].position.y = posy;
 							vertexarray[j*4+1].color = particles[j].color;
 
-							vertexarray[j*4+2].position.x = posx + particles[j].particleSize;
+							vertexarray[j*4+2].position.x = posx + particles[j].particleSize/2;
 							vertexarray[j*4+2].position.y = posy + particles[j].particleSize;
 							vertexarray[j*4+2].color = particles[j].color;
 
-							vertexarray[j*4+3].position.x = posx;
+							vertexarray[j*4+3].position.x = posx-particles[j].particleSize/2;
 							vertexarray[j*4+3].position.y = posy + particles[j].particleSize;
 							vertexarray[j*4+3].color = particles[j].color;
 
@@ -364,10 +365,10 @@ public:
 			{
 				if (particles[i].Update(seektarget))
 				{
-					vertexarray[i*4].position = sf::Vector2f(particles[i].x, particles[i].y);
-					vertexarray[i*4+1].position = sf::Vector2f(particles[i].x + particles[i].particleSize, particles[i].y);
-					vertexarray[i*4+2].position = sf::Vector2f(particles[i].x + particles[i].particleSize, particles[i].y + particles[i].particleSize);
-					vertexarray[i*4+3].position = sf::Vector2f(particles[i].x, particles[i].y + particles[i].particleSize);
+					vertexarray[i*4].position = sf::Vector2f(particles[i].x - particles[i].particleSize/2, particles[i].y);
+					vertexarray[i*4+1].position = sf::Vector2f(particles[i].x + particles[i].particleSize/2, particles[i].y);
+					vertexarray[i*4+2].position = sf::Vector2f(particles[i].x + particles[i].particleSize/2, particles[i].y + particles[i].particleSize);
+					vertexarray[i*4+3].position = sf::Vector2f(particles[i].x - particles[i].particleSize/2, particles[i].y + particles[i].particleSize);
 					vertexarray[i*4].color = particles[i].color;
 					vertexarray[i*4+1].color = particles[i].color;
 					vertexarray[i*4+2].color = particles[i].color;
@@ -375,10 +376,10 @@ public:
 				}
 				else
 				{
-					vertexarray[i*4].color = sf::Color::Black;
-					vertexarray[i*4+1].color = sf::Color::Black;
-					vertexarray[i*4+2].color = sf::Color::Black;
-					vertexarray[i*4+3].color = sf::Color::Black;
+					vertexarray[i*4].color = sf::Color::Transparent;
+					vertexarray[i*4+1].color = sf::Color::Transparent;
+					vertexarray[i*4+2].color = sf::Color::Transparent;
+					vertexarray[i*4+3].color = sf::Color::Transparent;
 				}
 			}
 		}
