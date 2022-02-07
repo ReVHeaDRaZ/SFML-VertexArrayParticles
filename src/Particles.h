@@ -4,7 +4,7 @@
 #include "RazVectorTools.h"
 
 #define M_PI 3.14159265358979323846
-#define MAX_NUM_PARTICLES 1000000	  //Maximum number of particles that can exist
+#define MAX_NUM_PARTICLES 500000	  //Maximum number of particles that can exist
 #define ANGLE_UP (M_PI / 2.0f)		  //straight up (90deg)
 #define FOUNTAIN_WIDTH (M_PI / 12.0f) //fountain width in radians (pi/12 is 15../deg)
 
@@ -15,7 +15,7 @@ float maxSpeed = 20.f;
 float maxForce = 0.2f;
 sf::Vector2f wind = sf::Vector2f(0.f,0.f);
 
-enum particleTypeEnum {SPARKS, FOUNTAIN, SLIME, MAX_PARTICLETYPE};
+enum particleTypeEnum {SPARKS, FOUNTAIN, SLIME, FIRE, MAX_PARTICLETYPE};
 enum behaviourTypeEnum {SEEK, ARRIVE, MAX_BEHAVIOURTYPE};
 uint8_t particleType = SPARKS;
 uint8_t behaviourType = SEEK;
@@ -71,6 +71,7 @@ private:
 
 public:
 	uint8_t lifetime;
+	float particleSize = 5.f;
 	float x, y;
 	sf::Vector2f velocity;
 
@@ -99,35 +100,48 @@ public:
 				init_v = RandomNumber(2.5f, 8.f);
 				velocity.y = 0 - sin(angle) * init_v;
 				velocity.x = cos(angle) * init_v;
-
+				particleSize = RandomNumber(1.f,7.f);
 				r = rand() % 25;
 				b = rand() % 255;
 				g = b;
+				lifetime = rand();
 				break;
 
 			case SPARKS:
 				gravity = 0.06f;
 				velocity.x = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
 				velocity.y = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
-
+				particleSize = RandomNumber(1.f,8.f);
 				r 	= 255;
 				b 	= rand() % 50;
 				g	= b;
+				lifetime = 1+ rand() % 200;
 				break;
 			case SLIME:
 				gravity = 0.1f;
 				velocity.x = (RandomNumber(1.f, 4.5f)) - (RandomNumber(1.f, 4.5f));
 				velocity.y = (RandomNumber(0.5f, 1.5f)) - (RandomNumber(1.f, 2.5f));
-
+				particleSize = RandomNumber(1.f,20.f);
 				r 	= 0;
 				b 	= rand() % 50;
 				g	= 255;
+				lifetime = rand();
+				break;
+			case FIRE:
+				gravity = 0.f;
+				velocity.x = (RandomNumber(0.f, 0.5f)) - (RandomNumber(0.f, 0.5f));
+				velocity.y = 0.f - (RandomNumber(2.5f, 5.5f));
+				particleSize = RandomNumber(2.f,20.f);
+				r 	= 255;
+				b 	= rand() % 50;
+				g	= b;
+				lifetime = 1 + rand() % 80;
 				break;
 			default:
 				break;
 		}
 
-		lifetime = rand();
+
 		active = true;
 		color = sf::Color(r, lifetime / 2, b, lifetime);
 	}
@@ -213,7 +227,7 @@ public:
 	{
 		// Add Forces
 		ApplyBehaviours();
-		AddForce(sf::Vector2f(0.f,gravity));
+		AddForce(sf::Vector2f(0.f,this->gravity));
 		AddForce(wind);
 
 		// Add Acceleration
@@ -266,7 +280,7 @@ public:
 };
 
 std::vector<Particle> particles;
-sf::VertexArray vertexarray(sf::Points, MAX_NUM_PARTICLES);
+sf::VertexArray vertexarray(sf::Quads,MAX_NUM_PARTICLES*4);
 
 class Emitter
 {
@@ -286,6 +300,10 @@ public:
 		for (uint i = 0; i < MAX_NUM_PARTICLES; i++)
 		{
 			particles.push_back(Particle(mywindow));
+			vertexarray[i*4].texCoords = (sf::Vector2f(0,0));
+			vertexarray[i*4+1].texCoords = (sf::Vector2f(64,0));
+			vertexarray[i*4+2].texCoords = (sf::Vector2f(64,64));
+			vertexarray[i*4+3].texCoords = (sf::Vector2f(0,64));
 		}
 	}
 
@@ -300,9 +318,23 @@ public:
 					if (!particles[j].active)
 					{
 						particles[j].Init(posx, posy);
-						vertexarray[j].position.x = posx;
-						vertexarray[j].position.y = posy;
-						vertexarray[j].color = particles[j].color;
+
+							vertexarray[j*4].position.x = posx;
+							vertexarray[j*4].position.y = posy;
+							vertexarray[j*4].color = particles[j].color;
+
+							vertexarray[j*4+1].position.x = posx + particles[j].particleSize;
+							vertexarray[j*4+1].position.y = posy;
+							vertexarray[j*4+1].color = particles[j].color;
+
+							vertexarray[j*4+2].position.x = posx + particles[j].particleSize;
+							vertexarray[j*4+2].position.y = posy + particles[j].particleSize;
+							vertexarray[j*4+2].color = particles[j].color;
+
+							vertexarray[j*4+3].position.x = posx;
+							vertexarray[j*4+3].position.y = posy + particles[j].particleSize;
+							vertexarray[j*4+3].color = particles[j].color;
+
 						lastParticleInitialized = j;
 						doFullSearch = false;
 						break;
@@ -332,11 +364,22 @@ public:
 			{
 				if (particles[i].Update(seektarget))
 				{
-					vertexarray[i].position = sf::Vector2f(particles[i].x, particles[i].y);
-					vertexarray[i].color = particles[i].color;
+					vertexarray[i*4].position = sf::Vector2f(particles[i].x, particles[i].y);
+					vertexarray[i*4+1].position = sf::Vector2f(particles[i].x + particles[i].particleSize, particles[i].y);
+					vertexarray[i*4+2].position = sf::Vector2f(particles[i].x + particles[i].particleSize, particles[i].y + particles[i].particleSize);
+					vertexarray[i*4+3].position = sf::Vector2f(particles[i].x, particles[i].y + particles[i].particleSize);
+					vertexarray[i*4].color = particles[i].color;
+					vertexarray[i*4+1].color = particles[i].color;
+					vertexarray[i*4+2].color = particles[i].color;
+					vertexarray[i*4+3].color = particles[i].color;
 				}
 				else
-					vertexarray[i].color = sf::Color::Black;
+				{
+					vertexarray[i*4].color = sf::Color::Black;
+					vertexarray[i*4+1].color = sf::Color::Black;
+					vertexarray[i*4+2].color = sf::Color::Black;
+					vertexarray[i*4+3].color = sf::Color::Black;
+				}
 			}
 		}
 	}

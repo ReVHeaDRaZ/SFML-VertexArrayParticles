@@ -17,13 +17,14 @@ bool steerBehaviour = false;	// To control steer behaviours on and off with mous
 int main()
 {
 	sf::RenderWindow window;
-	window.create(sf::VideoMode(winW, winH), "RaZ Particles");
+	window.create(sf::VideoMode(winW, winH), "RaZ Fountain");//,sf::Style::Fullscreen);
 	window.setFramerateLimit(60);
 	window.setMouseCursorVisible(false);
 
 	LoadTexture();	// For Sprite use at a later date
 
 	sf::RenderStates renderstate(sf::BlendAdd);
+	renderstate.texture = &spriteTexture;
 
 	// MousePointer
 	mousePos = sf::Mouse::getPosition(window);
@@ -81,7 +82,7 @@ int main()
 				if(event.key.code == sf::Keyboard::Key::Up)
 				{
 					numParticles+=10;
-					if(numParticles>8000) numParticles=8000;
+					if(numParticles>4000) numParticles=4000;
 				}
 				if(event.key.code == sf::Keyboard::Key::Down)
 				{
