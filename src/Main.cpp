@@ -17,7 +17,7 @@ bool steerBehaviour = false;	// To control steer behaviours on and off with mous
 int main()
 {
 	sf::RenderWindow window;
-	window.create(sf::VideoMode(winW, winH), "RaZ Fountain");
+	window.create(sf::VideoMode(winW, winH), "RaZ Particles");
 	window.setFramerateLimit(60);
 	window.setMouseCursorVisible(false);
 
