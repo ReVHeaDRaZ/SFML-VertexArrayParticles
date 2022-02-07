@@ -2,8 +2,8 @@
 #include "Platform/Platform.hpp"
 #include "Hud.h"
 
-const float winW = 1024;		// Window Resolution
-const float winH = 768;
+uint winW = 1024;				// Window Resolution
+uint winH = 768;
 sf::Vector2i mousePos;			// Mouse Pointer
 uint8_t pointerRadius = 5;
 float frames;					// To store FramesPerSecond
@@ -17,8 +17,11 @@ bool steerBehaviour = false;	// To control steer behaviours on and off with mous
 
 int main()
 {
+	sf::VideoMode videomode = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window;
-	window.create(sf::VideoMode(winW, winH), "RaZ Fountain");//,sf::Style::Fullscreen);
+	winW = videomode.width;
+	winH = videomode.height;
+	window.create(videomode, "RaZ Fountain",sf::Style::Fullscreen);
 	window.setFramerateLimit(60);
 	window.setMouseCursorVisible(false);
 

@@ -1,7 +1,7 @@
 #pragma once
 
-extern const float winW;
-extern const float winH;
+extern uint winW;
+extern uint winH;
 sf::Text heading, heading2, pMax, pEmit, pFrames, pForce, pSpeed, instructions, instructions2, behaviourheadingHud, behaviourtypeHud;
 sf::Font font;
 
