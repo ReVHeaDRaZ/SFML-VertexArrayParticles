@@ -9,8 +9,9 @@ uint8_t pointerRadius = 5;
 float frames;					// To store FramesPerSecond
 int count = 0;					// To count loops
 
-uint numParticles = 150; 		// To set Number of Particles to emit every frame
-bool emitParticles = false; 	// To control emitting with mousebutton
+uint textureNumber	= 0;		// To select Texture
+uint numParticles 	= 150; 		// To set Number of Particles to emit every frame
+bool emitParticles 	= false; 	// To control emitting with mousebutton
 bool steerBehaviour = false;	// To control steer behaviours on and off with mousebutton
 
 
@@ -21,10 +22,9 @@ int main()
 	window.setFramerateLimit(60);
 	window.setMouseCursorVisible(false);
 
-	LoadTexture();	// For Sprite use at a later date
-
+	LoadTextures();	// For Sprite use
 	sf::RenderStates renderstate(sf::BlendAdd);
-	renderstate.texture = &spriteTexture;
+	renderstate.texture = &spriteTexture[textureNumber];
 
 	// MousePointer
 	mousePos = sf::Mouse::getPosition(window);
@@ -121,6 +121,12 @@ int main()
 				{
 					maxForce -= 0.05f;
 					if(maxForce < 0.05f) maxForce = 0.05f;
+				}
+				if(event.key.code == sf::Keyboard::Key::T)
+				{
+					textureNumber++;
+					if(textureNumber > MAX_NUM_TEXTURES-1) textureNumber = 0;
+					renderstate.texture = &spriteTexture[textureNumber];
 				}
 			}
 		}
