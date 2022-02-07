@@ -32,7 +32,7 @@ int main()
 	circle.setOrigin(pointerRadius, pointerRadius);
 	circle.setPosition(mousePos.x, mousePos.y);
 
-	Emitter emitter(mousePos.x, mousePos.y, window);
+	Emitter emitter(window);
 
 	InitHud();
 

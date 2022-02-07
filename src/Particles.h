@@ -11,7 +11,6 @@
 extern uint numParticles;
 extern bool steerBehaviour;
 
-float gravity = 0.07;
 float maxSpeed = 20.f;
 float maxForce = 0.2f;
 sf::Vector2f wind = sf::Vector2f(0.f,0.f);
@@ -63,7 +62,7 @@ class Particle
 {
 private:
 	sf::RenderWindow& windowref;
-
+	float gravity = 0.07f;
 	float angle;
 	float init_v;
 	sf::Vector2f accel;
@@ -95,6 +94,7 @@ public:
 		switch(particleType)
 		{
 			case FOUNTAIN:
+				gravity = 0.07f;
 				angle = RandomNumber(ANGLE_UP - FOUNTAIN_WIDTH / 2.0f, ANGLE_UP + FOUNTAIN_WIDTH / 2.0f);
 				init_v = RandomNumber(2.5f, 8.f);
 				velocity.y = 0 - sin(angle) * init_v;
@@ -106,6 +106,7 @@ public:
 				break;
 
 			case SPARKS:
+				gravity = 0.06f;
 				velocity.x = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
 				velocity.y = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
 
@@ -114,6 +115,7 @@ public:
 				g	= b;
 				break;
 			case SLIME:
+				gravity = 0.1f;
 				velocity.x = (RandomNumber(1.f, 4.5f)) - (RandomNumber(1.f, 4.5f));
 				velocity.y = (RandomNumber(0.5f, 1.5f)) - (RandomNumber(1.f, 2.5f));
 
@@ -232,13 +234,13 @@ public:
 
 	bool Update(sf::Vector2f seektarget)
 	{
-		if (x < 0)
+		if (x < -200)
 		{
 			active = false;
 			lifetime = 0;
 			return 0;
 		}
-		if (x > windowref.getSize().x || y > windowref.getSize().y)
+		if (x > windowref.getSize().x + 200 || y > windowref.getSize().y + 200)
 		{
 			active = false;
 			lifetime = 0;
@@ -264,7 +266,7 @@ public:
 };
 
 std::vector<Particle> particles;
-sf::VertexArray vertexarray(sf::Points);
+sf::VertexArray vertexarray(sf::Points, MAX_NUM_PARTICLES);
 
 class Emitter
 {
@@ -277,14 +279,13 @@ private:
 public:
 	bool maxxedOut 		= false;	// then set maxxedOut when can't find an inactive particle
 
-	Emitter(uint posx, uint posy, sf::RenderWindow& window) :
+	Emitter(sf::RenderWindow& window) :
 		mywindow(window)
 	{
 		// Initialize Arrays
 		for (uint i = 0; i < MAX_NUM_PARTICLES; i++)
 		{
 			particles.push_back(Particle(mywindow));
-			vertexarray.append(sf::Vertex(sf::Vector2f(posx, posy), particles.back().color));
 		}
 	}
 
