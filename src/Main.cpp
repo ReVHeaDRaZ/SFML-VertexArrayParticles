@@ -13,7 +13,7 @@ uint textureNumber	= 0;		// To select Texture
 uint numParticles 	= 150; 		// To set Number of Particles to emit every frame
 bool emitParticles 	= false; 	// To control emitting with mousebutton
 bool steerBehaviour = false;	// To control steer behaviours on and off with mousebutton
-
+bool BlendingMode	= true;		// To select BlendMode 0-Alpha 1-Color
 
 int main()
 {
@@ -130,6 +130,12 @@ int main()
 					textureNumber++;
 					if(textureNumber > MAX_NUM_TEXTURES-1) textureNumber = 0;
 					renderstate.texture = &spriteTexture[textureNumber];
+				}
+				if(event.key.code == sf::Keyboard::Key::M)
+				{
+					BlendingMode = !BlendingMode;
+					if(BlendingMode) renderstate.blendMode = sf::BlendAdd;
+					else renderstate.blendMode = sf::BlendAlpha;
 				}
 			}
 		}

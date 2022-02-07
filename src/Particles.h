@@ -5,7 +5,7 @@
 
 #define M_PI 3.14159265358979323846
 #define MAX_NUM_PARTICLES 500000	  //Maximum number of particles that can exist
-#define MAX_NUM_TEXTURES 4
+#define MAX_NUM_TEXTURES 5
 #define ANGLE_UP (M_PI / 2.0f)		  //straight up (90deg)
 #define FOUNTAIN_WIDTH (M_PI / 12.0f) //fountain width in radians (pi/12 is 15../deg)
 
@@ -16,7 +16,7 @@ float maxSpeed = 20.f;
 float maxForce = 0.2f;
 sf::Vector2f wind = sf::Vector2f(0.f,0.f);
 
-enum particleTypeEnum {SPARKS, FOUNTAIN, SLIME, FIRE, MAX_PARTICLETYPE};
+enum particleTypeEnum {SPARKS, FOUNTAIN, SLIME, FIRE, LARGE, MAX_PARTICLETYPE};
 enum behaviourTypeEnum {SEEK, ARRIVE, MAX_BEHAVIOURTYPE};
 uint8_t particleType = SPARKS;
 uint8_t behaviourType = SEEK;
@@ -35,6 +35,8 @@ bool LoadTextures()
 	if (!spriteTexture[2].loadFromFile("content/snowflake64x64.png"))
 		return 0;
 	if (!spriteTexture[3].loadFromFile("content/pentagram64x64.png"))
+		return 0;
+	if (!spriteTexture[4].loadFromFile("content/RaZLogo64x64.png"))
 		return 0;
 	return 1;
 }
@@ -144,6 +146,17 @@ public:
 				b 	= rand() % 50;
 				g	= rand();
 				lifetime = 1 + rand() % 80;
+				break;
+			case LARGE:
+				gravity = 0.02f;
+				x+=RandomNumber(-25.f,25.f);
+				velocity.x = (RandomNumber(-5.f, 5.f));
+				velocity.y = 0.f - (RandomNumber(2.5f, 5.5f));
+				particleSize = RandomNumber(10.f,50.f);
+				r 	= rand() % 150;
+				b 	= rand() % 150;
+				g	= rand() % 150;
+				lifetime = 1 + rand() % 150;
 				break;
 			default:
 				break;
