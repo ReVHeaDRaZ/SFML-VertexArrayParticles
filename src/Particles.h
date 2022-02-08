@@ -383,8 +383,10 @@ public:
 	}
 };
 
-std::vector<Particle> particles;
+std::vector<Particle> particlesQuads;
+std::vector<Particle> particlesPoints;
 sf::VertexArray vertexarray(sf::Quads,MAX_NUM_PARTICLES*4);
+sf::VertexArray vertexarrayPoints(sf::Points, MAX_NUM_PARTICLES*2);
 
 class Emitter
 {
@@ -393,61 +395,72 @@ private:
 	uint lastParticleInitialized = 0;
 	bool doFullSearch 	= false;  	// Set true when entire array has been searched for an inactive particle
 
-
 public:
 	bool maxxedOut 		= false;	// then set maxxedOut when can't find an inactive particle
+	bool quads;						// Quads or Points
 
-	Emitter(sf::RenderWindow& window) :
+	Emitter(sf::RenderWindow& window, bool _quads) :
 		mywindow(window)
 	{
 		// Initialize Arrays
-		for (uint i = 0; i < MAX_NUM_PARTICLES; i++)
+		if(_quads)
 		{
-			particles.push_back(Particle(mywindow));
-			vertexarray[i*4].texCoords = (sf::Vector2f(0,0));
-			vertexarray[i*4+1].texCoords = (sf::Vector2f(64,0));
-			vertexarray[i*4+2].texCoords = (sf::Vector2f(64,64));
-			vertexarray[i*4+3].texCoords = (sf::Vector2f(0,64));
+			this->quads = _quads;
+			for (uint i = 0; i < MAX_NUM_PARTICLES; i++)
+			{
+				particlesQuads.push_back(Particle(mywindow));
+				vertexarray[i*4].texCoords = (sf::Vector2f(0,0));
+				vertexarray[i*4+1].texCoords = (sf::Vector2f(64,0));
+				vertexarray[i*4+2].texCoords = (sf::Vector2f(64,64));
+				vertexarray[i*4+3].texCoords = (sf::Vector2f(0,64));
+			}
+		} else
+		{
+			this->quads = _quads;
+			for (uint i = 0; i < MAX_NUM_PARTICLES*2; i++)
+			{
+				particlesPoints.push_back(Particle(mywindow));
+			}
 		}
 	}
 
-	void Emit(uint posx, uint posy)
+	void EmitQuads(uint posx, uint posy)
 	{
 		if(!maxxedOut)
 		{
 			for (uint i = 0; i < numParticles; i++)
 			{
-				for (uint j = lastParticleInitialized; j < particles.size(); j++)
+				for (uint j = lastParticleInitialized; j < particlesQuads.size(); j++)
 				{
-					if (!particles[j].active)
+					if (!particlesQuads[j].active)
 					{
-						particles[j].Init(posx, posy);
+						particlesQuads[j].Init(posx, posy);
 
-							vertexarray[j*4].position.x = posx-particles[j].particleSize/2;
-							vertexarray[j*4].position.y = posy;
-							vertexarray[j*4].color = particles[j].color;
+						vertexarray[j*4].position.x = posx-particlesQuads[j].particleSize/2;
+						vertexarray[j*4].position.y = posy;
+						vertexarray[j*4].color = particlesQuads[j].color;
 
-							vertexarray[j*4+1].position.x = posx + particles[j].particleSize/2;
-							vertexarray[j*4+1].position.y = posy;
-							vertexarray[j*4+1].color = particles[j].color;
+						vertexarray[j*4+1].position.x = posx + particlesQuads[j].particleSize/2;
+						vertexarray[j*4+1].position.y = posy;
+						vertexarray[j*4+1].color = particlesQuads[j].color;
 
-							vertexarray[j*4+2].position.x = posx + particles[j].particleSize/2;
-							vertexarray[j*4+2].position.y = posy + particles[j].particleSize;
-							vertexarray[j*4+2].color = particles[j].color;
+						vertexarray[j*4+2].position.x = posx + particlesQuads[j].particleSize/2;
+						vertexarray[j*4+2].position.y = posy + particlesQuads[j].particleSize;
+						vertexarray[j*4+2].color = particlesQuads[j].color;
 
-							vertexarray[j*4+3].position.x = posx-particles[j].particleSize/2;
-							vertexarray[j*4+3].position.y = posy + particles[j].particleSize;
-							vertexarray[j*4+3].color = particles[j].color;
+						vertexarray[j*4+3].position.x = posx-particlesQuads[j].particleSize/2;
+						vertexarray[j*4+3].position.y = posy + particlesQuads[j].particleSize;
+						vertexarray[j*4+3].color = particlesQuads[j].color;
 
 						lastParticleInitialized = j;
 						doFullSearch = false;
 						break;
 					}
-					else if (j == (particles.size() - 1))
+					else if (j == (particlesQuads.size() - 1))
 					{
 						if(doFullSearch)
 							{
-								lastParticleInitialized = particles.size()-2;
+								lastParticleInitialized = particlesQuads.size()-2;
 								maxxedOut = true;
 							}
 							else
@@ -460,22 +473,60 @@ public:
 		}
 	}
 
-	void Update(sf::Vector2f seektarget)
+	void EmitPoints(uint posx, uint posy)
 	{
-		for (uint i = 0; i < particles.size(); i++)
+		if(!maxxedOut)
 		{
-			if (particles[i].active)
+			for (uint i = 0; i < numParticles; i++)
 			{
-				if (particles[i].Update(seektarget))
+				for (uint j = lastParticleInitialized; j < particlesPoints.size(); j++)
 				{
-					vertexarray[i*4].position = sf::Vector2f(particles[i].x - particles[i].particleSize/2, particles[i].y);
-					vertexarray[i*4+1].position = sf::Vector2f(particles[i].x + particles[i].particleSize/2, particles[i].y);
-					vertexarray[i*4+2].position = sf::Vector2f(particles[i].x + particles[i].particleSize/2, particles[i].y + particles[i].particleSize);
-					vertexarray[i*4+3].position = sf::Vector2f(particles[i].x - particles[i].particleSize/2, particles[i].y + particles[i].particleSize);
-					vertexarray[i*4].color = particles[i].color;
-					vertexarray[i*4+1].color = particles[i].color;
-					vertexarray[i*4+2].color = particles[i].color;
-					vertexarray[i*4+3].color = particles[i].color;
+					if (!particlesPoints[j].active)
+					{
+						particlesPoints[j].Init(posx, posy);
+
+						vertexarrayPoints[j].position.x = posx;
+						vertexarrayPoints[j].position.y = posy;
+						vertexarrayPoints[j].color = particlesPoints[j].color;
+
+
+						lastParticleInitialized = j;
+						doFullSearch = false;
+						break;
+					}
+					else if (j == (particlesPoints.size() - 1))
+					{
+						if(doFullSearch)
+							{
+								lastParticleInitialized = particlesPoints.size()-2;
+								maxxedOut = true;
+							}
+							else
+							lastParticleInitialized = 0;
+						doFullSearch = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	void UpdateQuads(sf::Vector2f seektarget)
+	{
+		for (uint i = 0; i < particlesQuads.size(); i++)
+		{
+			if (particlesQuads[i].active)
+			{
+				if (particlesQuads[i].Update(seektarget))
+				{
+					vertexarray[i*4].position = sf::Vector2f(particlesQuads[i].x - particlesQuads[i].particleSize/2, particlesQuads[i].y);
+					vertexarray[i*4+1].position = sf::Vector2f(particlesQuads[i].x + particlesQuads[i].particleSize/2, particlesQuads[i].y);
+					vertexarray[i*4+2].position = sf::Vector2f(particlesQuads[i].x + particlesQuads[i].particleSize/2, particlesQuads[i].y + particlesQuads[i].particleSize);
+					vertexarray[i*4+3].position = sf::Vector2f(particlesQuads[i].x - particlesQuads[i].particleSize/2, particlesQuads[i].y + particlesQuads[i].particleSize);
+					vertexarray[i*4].color = particlesQuads[i].color;
+					vertexarray[i*4+1].color = particlesQuads[i].color;
+					vertexarray[i*4+2].color = particlesQuads[i].color;
+					vertexarray[i*4+3].color = particlesQuads[i].color;
 				}
 				else
 				{
@@ -484,6 +535,23 @@ public:
 					vertexarray[i*4+2].color = sf::Color::Transparent;
 					vertexarray[i*4+3].color = sf::Color::Transparent;
 				}
+			}
+		}
+	}
+
+	void UpdatePoints(sf::Vector2f seektarget)
+	{
+		for (uint i = 0; i < particlesPoints.size(); i++)
+		{
+			if (particlesPoints[i].active)
+			{
+				if (particlesPoints[i].Update(seektarget))
+				{
+					vertexarrayPoints[i].position = sf::Vector2f(particlesPoints[i].x, particlesPoints[i].y);
+					vertexarrayPoints[i].color = particlesPoints[i].color;
+				}
+				else
+					vertexarrayPoints[i].color = sf::Color::Transparent;
 			}
 		}
 	}

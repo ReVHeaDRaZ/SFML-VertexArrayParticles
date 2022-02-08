@@ -14,6 +14,7 @@ uint numParticles 	= 150; 		// To set Number of Particles to emit every frame
 bool emitParticles 	= false; 	// To control emitting with mousebutton
 bool steerBehaviour = false;	// To control steer behaviours on and off with mousebutton
 bool BlendingMode	= true;		// To select BlendMode 0-Alpha 1-Color
+bool drawQuads = true;			// Draw Quads or Points
 
 int main()
 {
@@ -35,7 +36,8 @@ int main()
 	circle.setOrigin(pointerRadius, pointerRadius);
 	circle.setPosition(mousePos.x, mousePos.y);
 
-	Emitter emitter(window);
+	Emitter emitterQuads(window, true);
+	Emitter emitterPoints(window, false);
 
 	InitHud();
 
@@ -57,7 +59,8 @@ int main()
 			if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Button::Left)
 				{
 					emitParticles = false;
-					emitter.maxxedOut = false;
+					emitterQuads.maxxedOut 	= false;
+					emitterPoints.maxxedOut = false;
 				}
 			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Button::Middle)
 				SwitchParticleType();
@@ -145,12 +148,27 @@ int main()
 		}
 
 		mousePos = sf::Mouse::getPosition(window);
-		if(emitParticles && (!emitter.maxxedOut)) emitter.Emit(mousePos.x, mousePos.y);
+		if(drawQuads)
+		{
+			if(emitParticles && (!emitterQuads.maxxedOut)) emitterQuads.EmitQuads(mousePos.x, mousePos.y);
+		}else
+		{
+			if(emitParticles && (!emitterPoints.maxxedOut)) emitterPoints.EmitPoints(mousePos.x, mousePos.y);
+		}
 
+		// Draw Everything
 		window.clear(sf::Color::Black);
 
-		emitter.Update(sf::Vector2f(mousePos.x, mousePos.y));
-		window.draw(vertexarray,renderstate);
+		if(drawQuads)
+		{
+			emitterQuads.UpdateQuads(sf::Vector2f(mousePos.x, mousePos.y));
+			window.draw(vertexarray,renderstate);
+		}else
+		{
+			emitterPoints.UpdatePoints(sf::Vector2f(mousePos.x, mousePos.y));
+			window.draw(vertexarrayPoints, sf::BlendAdd);
+		}
+
 		circle.setPosition(mousePos.x, mousePos.y);
 		window.draw(circle, sf::BlendAdd);
 		DrawHud(&window);
@@ -166,11 +184,14 @@ int main()
 		count++;
 		if(count>=40)
 		{
-			if(emitter.maxxedOut)
+			if(emitterQuads.maxxedOut || emitterPoints.maxxedOut)
 				pMax.setFillColor(sf::Color::Red);
 			else pMax.setFillColor(sf::Color::White);
 
-			pMax.setString(to_string(particles.size()));
+			if(drawQuads) pMax.setString(to_string(particlesQuads.size()));
+			else
+				pMax.setString(to_string(particlesPoints.size()));
+
 			pEmit.setString(to_string(numParticles));
 			pFrames.setString(to_string(frames));
 			pForce.setString(to_string(maxForce));
