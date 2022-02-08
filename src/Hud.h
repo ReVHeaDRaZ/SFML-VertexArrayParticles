@@ -3,6 +3,7 @@
 extern uint winW;
 extern uint winH;
 sf::Text heading, heading2, pMax, pEmit, pFrames, pForce, pSpeed, instructions, instructions2, behaviourheadingHud, behaviourtypeHud;
+sf::Text menuHeading, menuPoints, menuQuads;
 sf::Font font;
 
 template <typename T>
@@ -15,9 +16,28 @@ std::string to_string(T value)
 }
 void InitHud();
 void DrawHud(sf::RenderWindow* win);
+void DrawMenu(sf::RenderWindow* win);
 
 void InitHud()
 {
+	// MENU
+	menuHeading.setFont(font);
+	menuHeading.setCharacterSize(150);
+	menuHeading.setFillColor(sf::Color::White);
+	menuHeading.setPosition((winW/2)-400, 100);
+	menuHeading.setString("RaZ PaRTiCLeS");
+	menuPoints 	= menuHeading;
+	menuQuads	= menuHeading;
+
+	menuPoints.setCharacterSize(50);
+	menuPoints.setString("Press P for Points");
+	menuPoints.setPosition(250, winH/2);
+
+	menuQuads.setCharacterSize(50);
+	menuQuads.setString("Press Q for Quads");
+	menuQuads.setPosition(winW-550, winH/2);
+
+	// HUD
 	heading.setFont(font);
 	heading.setCharacterSize(20);
 	heading.setFillColor(sf::Color::White);
@@ -86,4 +106,11 @@ void DrawHud(sf::RenderWindow* win)
 	win->draw(pSpeed);
 	win->draw(heading2);
 	win->draw(instructions2);
+}
+
+void DrawMenu(sf::RenderWindow* win)
+{
+	win->draw(menuHeading);
+	win->draw(menuPoints);
+	win->draw(menuQuads);
 }
