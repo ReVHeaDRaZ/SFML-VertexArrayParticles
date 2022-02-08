@@ -2,7 +2,7 @@
 #include "Platform/Platform.hpp"
 #include "Hud.h"
 
-uint winW = 1024;				// Window Resolution
+uint winW = 1024;				// Window Resolution is set by getDesktopMode
 uint winH = 768;
 sf::Vector2i mousePos;			// Mouse Pointer
 uint8_t pointerRadius = 5;
@@ -137,6 +137,11 @@ int main()
 					if(BlendingMode) renderstate.blendMode = sf::BlendAdd;
 					else renderstate.blendMode = sf::BlendAlpha;
 				}
+				if(event.key.code == sf::Keyboard::Key::O)
+				{
+					obstacles.push_back(Obstacle(sf::Vector2f(mousePos.x,mousePos.y), RandomNumber(10.f,60.f)));
+
+				}
 			}
 		}
 
@@ -150,6 +155,7 @@ int main()
 		circle.setPosition(mousePos.x, mousePos.y);
 		window.draw(circle, sf::BlendAdd);
 		DrawHud(&window);
+		for(uint i = 0; i<obstacles.size(); i++) obstacles[i].Draw(window);
 
 		window.display();
 

@@ -67,6 +67,36 @@ void SwitchParticleType()
 		particleType = 0;
 }
 
+
+class Obstacle
+{
+	public:
+	sf::Vector2f location;
+	float radius;
+	sf::Sprite obstacleSprite;
+
+	Obstacle(sf::Vector2f _location, float _radius)
+	{
+		location = _location;
+		radius = _radius;
+
+		obstacleSprite.setTexture(spriteTexture[0]);
+		obstacleSprite.setScale(radius/16,radius/16);
+		obstacleSprite.setPosition(location);
+		obstacleSprite.setOrigin(obstacleSprite.getLocalBounds().width/2 ,obstacleSprite.getLocalBounds().height/2);
+		obstacleSprite.setColor(sf::Color((uint8_t)rand(),(uint8_t)rand(),(uint8_t)rand(),100));
+
+	}
+
+	void Draw(sf::RenderTarget& _rendertarget)
+	{
+		_rendertarget.draw(obstacleSprite);
+	}
+};
+
+std::vector<Obstacle> obstacles;
+
+
 class Particle
 {
 private:
@@ -77,6 +107,7 @@ private:
 	sf::Vector2f accel;
 	sf::Vector2f seekForce;
 	sf::Vector2f arriveForce;
+	sf::Vector2f avoidForce;
 
 public:
 	uint8_t lifetime;
@@ -223,6 +254,52 @@ public:
 		return steer;
 	}
 
+	sf::Vector2f Avoid(std::vector<Obstacle>& _obstacles, int _amountOfObstacles){
+    	float aheadDist = 25;
+    	sf::Vector2f steer = sf::Vector2f(0,0);
+		sf::Vector2f location = sf::Vector2f(x,y);
+
+		// Calculate Ahead points
+		sf::Vector2f velNormal = velocity;
+    	velNormal = SetMagnitude(velNormal, aheadDist);
+    	sf::Vector2f ahead = location + velNormal;
+    	velNormal = SetMagnitude(velNormal, aheadDist/2);
+    	sf::Vector2f ahead2 = location + velNormal;
+
+    	sf::Vector2f mostThreatening = FindMostThreateningLocation(ahead, ahead2, _obstacles, _amountOfObstacles);
+
+    	if(mostThreatening != sf::Vector2f(0,0))
+		{
+      		steer = ahead - mostThreatening;
+      		steer = SetMagnitude(steer, maxForce*2);
+    	}
+
+    	return steer;
+  	}
+
+	// ***********For finding Most Threatening obstacle****************
+  	bool lineIntersectsObstacle(sf::Vector2f _ahead, sf::Vector2f _ahead2, sf::Vector2f _obstacle, float _radius)
+	{
+    	return GetDistance(_obstacle, _ahead) <= _radius || GetDistance(_obstacle, _ahead2) <= _radius;
+	}
+
+	sf::Vector2f FindMostThreateningLocation(sf::Vector2f _ahead, sf::Vector2f _ahead2, std::vector<Obstacle>& _obstacles, int amountObstacles)
+	{
+    	sf::Vector2f mostThreatening = sf::Vector2f(0,0);
+
+    	for(int i=0; i<amountObstacles; i++)
+		{
+      		sf::Vector2f obstacle = _obstacles[i].location;
+      		bool collision = lineIntersectsObstacle(_ahead,_ahead2, obstacle, obstacles[i].radius);
+
+      		// "position" is the character's current position
+        	if (collision && (GetDistance(sf::Vector2f(x,y), obstacle) < GetDistance(sf::Vector2f(x,y), mostThreatening)))
+            	mostThreatening = obstacle;
+    	}
+    	return mostThreatening;
+  	}
+  // ********End Most Threatening*********************
+
 	void ApplyBehaviours()
 	{
 		if(steerBehaviour)
@@ -242,6 +319,11 @@ public:
 			}
 		// NEED TO ADD WEIGHTING
 		}
+
+			avoidForce = Avoid(obstacles, (int)obstacles.size());
+			avoidForce = ScaleVector(avoidForce, 2.5f);
+			AddForce(avoidForce);
+
 	}
 
 	void ApplyForces()
@@ -249,6 +331,7 @@ public:
 		// Add Forces
 		ApplyBehaviours();
 		AddForce(sf::Vector2f(0.f,this->gravity));
+
 		AddForce(wind);
 
 		// Add Acceleration
