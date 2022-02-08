@@ -2,8 +2,8 @@
 #include "Platform/Platform.hpp"
 #include "Hud.h"
 
-uint winW = 1024;				// Window Resolution is set by getDesktopMode
-uint winH = 768;
+uint winW = 1920;				// Window Resolution
+uint winH = 1080;
 sf::Vector2i mousePos;			// Mouse Pointer
 uint8_t pointerRadius = 5;
 float frames;					// To store FramesPerSecond
@@ -17,13 +17,12 @@ bool BlendingMode	= true;		// To select BlendMode 0-Alpha 1-Color
 
 int main()
 {
-	sf::VideoMode videomode = sf::VideoMode::getDesktopMode();
 	sf::RenderWindow window;
-	winW = videomode.width;
-	winH = videomode.height;
-	window.create(videomode, "RaZ Fountain",sf::Style::Fullscreen);
+	window.create(sf::VideoMode(winW,winH), "RaZ Fountain",sf::Style::Fullscreen); // Having issues on Spanned monitors to overriding with default winW,winH at moment
 	window.setFramerateLimit(60);
 	window.setMouseCursorVisible(false);
+	winW = window.getSize().x;
+	winH = window.getSize().y;
 
 	LoadTextures();	// For Sprite use
 	sf::RenderStates renderstate(sf::BlendAdd);
