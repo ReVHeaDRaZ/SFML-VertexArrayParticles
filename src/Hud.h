@@ -35,7 +35,7 @@ void InitHud()
 
 	heading.setString("MaxParticles     ParticlesEmittedPerFrame     FPS   ");
 
-	instructions.setString("LMB-          Emit Particles\nMMB or P-   Particle Type\nRMB-          Apply Behaviour\nUPnDWN-     ParticleAmount\nLEFTnRIGHT- Wind Amount\nB-             Change Behaviour\nT-              Change Texture\nM-            Blending Mode");
+	instructions.setString("LMB-          Emit Particles\nMMB or P-   Particle Type\nRMB-          Apply Behaviour\nUPnDWN-     ParticleAmount\nLEFTnRIGHT- Wind Amount\nB-             Change Behaviour\nT-              Change Texture\nM-             Blending Mode\nO-              Spawn Obstacle");
 	instructions.setPosition(winW - 220, 20);
 
 	behaviourheadingHud.setString("BehaviourType");
