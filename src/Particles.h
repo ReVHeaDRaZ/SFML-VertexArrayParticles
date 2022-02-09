@@ -4,7 +4,7 @@
 #include "RazVectorTools.h"
 
 #define M_PI 3.14159265358979323846
-#define MAX_NUM_PARTICLES 500000	  //Maximum number of particles that can exist
+#define MAX_NUM_PARTICLES 250000	  //Maximum number of particles that can exist *2 for Points
 #define MAX_NUM_TEXTURES 5
 #define ANGLE_UP (M_PI / 2.0f)		  //straight up (90deg)
 #define FOUNTAIN_WIDTH (M_PI / 12.0f) //fountain width in radians (pi/12 is 15../deg)

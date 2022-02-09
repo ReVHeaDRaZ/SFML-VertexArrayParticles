@@ -31,11 +31,11 @@ void InitHud()
 
 	menuPoints.setCharacterSize(50);
 	menuPoints.setString("Press P for Points");
-	menuPoints.setPosition(250, winH/2);
+	menuPoints.setPosition(winW-550, winH/2);
 
 	menuQuads.setCharacterSize(50);
 	menuQuads.setString("Press Q for Quads");
-	menuQuads.setPosition(winW-550, winH/2);
+	menuQuads.setPosition(250, winH/2);
 
 	// HUD
 	heading.setFont(font);

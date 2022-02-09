@@ -17,8 +17,59 @@ bool BlendingMode	= true;		// To select BlendMode 0-Alpha 1-Color
 bool drawQuads 		= true;		// Draw Quads or Points
 bool MenuState		= true;		// Menu or running
 
-int main()
+static void show_usage(std::string name)
 {
+    std::cout << "Usage: " << name << " <option(s)> "
+              << "Options:\n"
+              << "\t-h\t\tShow this help message\n"
+              << "\t-r Resolution WIDTH HEIGHT\t"
+              << std::endl;
+}
+
+int main(int argc, char* argv[])
+{
+    //-------------Command-Line Arguments-----------------
+	// No Arguments
+	if(argc==1)
+	{
+        winW = 1920;
+		winH = 1080;
+	}
+	else
+	{	// Not enough arguments
+		if (argc < 3)
+		{
+        	std::cout << "Usage: " << argv[0] << "-r Resolution WIDTH HEIGHT" << std::endl;
+			show_usage(argv[0]);
+        	return 0;
+    	}
+
+		std::string widthArg;
+		std::string heightArg;
+		for (int i = 1; i < argc; ++i)
+		{
+        	std::string arg = argv[i];
+        	if (arg == "-h") {
+            	show_usage(argv[0]);
+            	return 0;
+        	} else if (arg == "-r")
+			{
+            	if (i + 1 < argc) { // Make sure we aren't at the end of argv!
+                	widthArg = argv[i++]; // Increment 'i' so we don't get the argument as the next argv[i].
+            	} else
+				{ // Uh-oh, there was not enough argument to the option.
+                  	std::cout << "-r option requires two arguments." << std::endl;
+                	return 0;
+            	}
+			} else
+			{
+            	heightArg = argv[i];
+        	}
+    	}
+		winW = stoi(widthArg);
+		winH = stoi(heightArg);
+	}
+
 	sf::RenderWindow window;
 	window.create(sf::VideoMode(winW,winH), "RaZ Particles",sf::Style::Fullscreen); // Having issues on Spanned monitors to overriding with default winW,winH at moment
 	window.setFramerateLimit(60);
@@ -70,9 +121,10 @@ int main()
 					}
 				}
 			}
-
-		emitterQuads.EmitQuads(winW-400, (winH/2)+100);
-		emitterPoints.EmitPoints(400, (winH/2)+100);
+		particleType = SLIME;
+		emitterQuads.EmitQuads(400, (winH/2)+100);
+		particleType = SPARKS;
+		emitterPoints.EmitPoints(winW-400, (winH/2)+100);
 		emitterQuads.UpdateQuads(sf::Vector2f(0,0));
 		emitterPoints.UpdatePoints(sf::Vector2f(0,0));
 		// Draw Everything
