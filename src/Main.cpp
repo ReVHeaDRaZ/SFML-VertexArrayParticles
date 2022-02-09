@@ -120,9 +120,9 @@ int main(int argc, char* argv[])
 				}
 			}
 		particleType = SLIME;
-		emitterQuads.EmitQuads(400, (winH/2)+100);
+		emitterQuads.EmitQuads((winW/2)-250, (winH/2)+100);
 		particleType = SPARKS;
-		emitterPoints.EmitPoints(winW-400, (winH/2)+100);
+		emitterPoints.EmitPoints((winW/2)+250, (winH/2)+100);
 		emitterQuads.UpdateQuads(sf::Vector2f(0,0));
 		emitterPoints.UpdatePoints(sf::Vector2f(0,0));
 		// Draw Everything
