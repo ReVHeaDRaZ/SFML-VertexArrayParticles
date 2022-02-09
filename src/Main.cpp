@@ -54,17 +54,15 @@ int main(int argc, char* argv[])
             	return 0;
         	} else if (arg == "-r")
 			{
-            	if (i + 1 < argc) { // Make sure we aren't at the end of argv!
-                	widthArg = argv[i++]; // Increment 'i' so we don't get the argument as the next argv[i].
-            	} else
+            	if (i + 2 < argc) { // Make sure we aren't at the end of argv!
+                	widthArg 	= argv[i+1]; // Increment 'i' so we don't get the argument as the next argv[i].
+					heightArg 	= argv[i+2];
+				} else
 				{ // Uh-oh, there was not enough argument to the option.
                   	std::cout << "-r option requires two arguments." << std::endl;
                 	return 0;
             	}
-			} else
-			{
-            	heightArg = argv[i];
-        	}
+			}
     	}
 		winW = stoi(widthArg);
 		winH = stoi(heightArg);
