@@ -4,7 +4,8 @@
 #include "RazVectorTools.h"
 
 #define M_PI 3.14159265358979323846
-#define MAX_NUM_PARTICLES 1000000	  //Maximum number of particles that can exist
+#define MAX_NUM_PARTICLES 250000	  //Maximum number of particles that can exist *2 for Points
+#define MAX_NUM_TEXTURES 5
 #define ANGLE_UP (M_PI / 2.0f)		  //straight up (90deg)
 #define FOUNTAIN_WIDTH (M_PI / 12.0f) //fountain width in radians (pi/12 is 15../deg)
 
@@ -15,19 +16,27 @@ float maxSpeed = 20.f;
 float maxForce = 0.2f;
 sf::Vector2f wind = sf::Vector2f(0.f,0.f);
 
-enum particleTypeEnum {SPARKS, FOUNTAIN, SLIME, MAX_PARTICLETYPE};
+enum particleTypeEnum {SPARKS, FOUNTAIN, SLIME, FIRE, LARGE, MAX_PARTICLETYPE};
 enum behaviourTypeEnum {SEEK, ARRIVE, MAX_BEHAVIOURTYPE};
 uint8_t particleType = SPARKS;
 uint8_t behaviourType = SEEK;
 
-sf::Texture spriteTexture;
-bool LoadTexture();
+sf::Texture spriteTexture[MAX_NUM_TEXTURES];
+bool LoadTextures();
 void SwitchBehaviourType();
 void SwitchParticleType();
 
-bool LoadTexture()
+bool LoadTextures()
 {
-	if (!spriteTexture.loadFromFile("content/Dot64x64.png"))
+	if (!spriteTexture[0].loadFromFile("content/Dot64x64.png"))
+		return 0;
+	if (!spriteTexture[1].loadFromFile("content/Star64x64.png"))
+		return 0;
+	if (!spriteTexture[2].loadFromFile("content/snowflake64x64.png"))
+		return 0;
+	if (!spriteTexture[3].loadFromFile("content/pentagram64x64.png"))
+		return 0;
+	if (!spriteTexture[4].loadFromFile("content/RaZLogo64x64.png"))
 		return 0;
 	return 1;
 }
@@ -58,6 +67,36 @@ void SwitchParticleType()
 		particleType = 0;
 }
 
+
+class Obstacle
+{
+	public:
+	sf::Vector2f location;
+	float radius;
+	sf::Sprite obstacleSprite;
+
+	Obstacle(sf::Vector2f _location, float _radius)
+	{
+		location = _location;
+		radius = _radius;
+
+		obstacleSprite.setTexture(spriteTexture[0]);
+		obstacleSprite.setScale(radius/16,radius/16);
+		obstacleSprite.setPosition(location);
+		obstacleSprite.setOrigin(obstacleSprite.getLocalBounds().width/2 ,obstacleSprite.getLocalBounds().height/2);
+		obstacleSprite.setColor(sf::Color((uint8_t)rand(),(uint8_t)rand(),(uint8_t)rand(),100));
+
+	}
+
+	void Draw(sf::RenderTarget& _rendertarget)
+	{
+		_rendertarget.draw(obstacleSprite);
+	}
+};
+
+std::vector<Obstacle> obstacles;
+
+
 class Particle
 {
 private:
@@ -68,9 +107,11 @@ private:
 	sf::Vector2f accel;
 	sf::Vector2f seekForce;
 	sf::Vector2f arriveForce;
+	sf::Vector2f avoidForce;
 
 public:
 	uint8_t lifetime;
+	float particleSize = 5.f;
 	float x, y;
 	sf::Vector2f velocity;
 
@@ -99,37 +140,62 @@ public:
 				init_v = RandomNumber(2.5f, 8.f);
 				velocity.y = 0 - sin(angle) * init_v;
 				velocity.x = cos(angle) * init_v;
-
+				particleSize = RandomNumber(1.f,7.f);
 				r = rand() % 25;
 				b = rand() % 255;
-				g = b;
+				g = r;
+				lifetime = rand();
 				break;
 
 			case SPARKS:
 				gravity = 0.06f;
 				velocity.x = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
 				velocity.y = (RandomNumber(1.f, 2.5f)) - (RandomNumber(1.f, 2.5f));
-
+				particleSize = RandomNumber(1.f,8.f);
 				r 	= 255;
 				b 	= rand() % 50;
-				g	= b;
+				g	= 1+rand()%150;
+				lifetime = 1+ rand() % 200;
 				break;
 			case SLIME:
 				gravity = 0.1f;
 				velocity.x = (RandomNumber(1.f, 4.5f)) - (RandomNumber(1.f, 4.5f));
 				velocity.y = (RandomNumber(0.5f, 1.5f)) - (RandomNumber(1.f, 2.5f));
-
+				particleSize = RandomNumber(1.f,35.f);
 				r 	= 0;
+				b 	= rand() % 20;
+				g	= 10 + rand() % 90;
+				lifetime = rand();
+				break;
+			case FIRE:
+				gravity = 0.f;
+				x+=RandomNumber(-5.f,5.f);
+				velocity.x = (RandomNumber(0.f, 0.5f)) - (RandomNumber(0.f, 0.5f));
+				velocity.y = 0.f - (RandomNumber(2.5f, 5.5f));
+				particleSize = RandomNumber(2.f,20.f);
+				r 	= 255;
 				b 	= rand() % 50;
-				g	= 255;
+				g	= rand();
+				lifetime = 1 + rand() % 80;
+				break;
+			case LARGE:
+				gravity = 0.02f;
+				x+=RandomNumber(-25.f,25.f);
+				velocity.x = (RandomNumber(-5.f, 5.f));
+				velocity.y = 0.f - (RandomNumber(2.5f, 5.5f));
+				particleSize = RandomNumber(10.f,50.f);
+				r 	= rand() % 150;
+				b 	= rand() % 150;
+				g	= rand() % 150;
+				lifetime = 1 + rand() % 150;
 				break;
 			default:
 				break;
 		}
 
-		lifetime = rand();
+
 		active = true;
-		color = sf::Color(r, lifetime / 2, b, lifetime);
+		color = sf::Color(r, g, b, lifetime);
 	}
 
 	// --------------------------STEERING BEHAVIOURS-------------------------------------
@@ -188,6 +254,52 @@ public:
 		return steer;
 	}
 
+	sf::Vector2f Avoid(std::vector<Obstacle>& _obstacles, int _amountOfObstacles){
+    	float aheadDist = 25;
+    	sf::Vector2f steer = sf::Vector2f(0,0);
+		sf::Vector2f location = sf::Vector2f(x,y);
+
+		// Calculate Ahead points
+		sf::Vector2f velNormal = velocity;
+    	velNormal = SetMagnitude(velNormal, aheadDist);
+    	sf::Vector2f ahead = location + velNormal;
+    	velNormal = SetMagnitude(velNormal, aheadDist/2);
+    	sf::Vector2f ahead2 = location + velNormal;
+
+    	sf::Vector2f mostThreatening = FindMostThreateningLocation(ahead, ahead2, _obstacles, _amountOfObstacles);
+
+    	if(mostThreatening != sf::Vector2f(0,0))
+		{
+      		steer = ahead - mostThreatening;
+      		steer = SetMagnitude(steer, maxForce*2);
+    	}
+
+    	return steer;
+  	}
+
+	// ***********For finding Most Threatening obstacle****************
+  	bool lineIntersectsObstacle(sf::Vector2f _ahead, sf::Vector2f _ahead2, sf::Vector2f _obstacle, float _radius)
+	{
+    	return GetDistance(_obstacle, _ahead) <= _radius || GetDistance(_obstacle, _ahead2) <= _radius;
+	}
+
+	sf::Vector2f FindMostThreateningLocation(sf::Vector2f _ahead, sf::Vector2f _ahead2, std::vector<Obstacle>& _obstacles, int amountObstacles)
+	{
+    	sf::Vector2f mostThreatening = sf::Vector2f(0,0);
+
+    	for(int i=0; i<amountObstacles; i++)
+		{
+      		sf::Vector2f obstacle = _obstacles[i].location;
+      		bool collision = lineIntersectsObstacle(_ahead,_ahead2, obstacle, obstacles[i].radius);
+
+      		// "position" is the character's current position
+        	if (collision && (GetDistance(sf::Vector2f(x,y), obstacle) < GetDistance(sf::Vector2f(x,y), mostThreatening)))
+            	mostThreatening = obstacle;
+    	}
+    	return mostThreatening;
+  	}
+  // ********End Most Threatening*********************
+
 	void ApplyBehaviours()
 	{
 		if(steerBehaviour)
@@ -207,13 +319,19 @@ public:
 			}
 		// NEED TO ADD WEIGHTING
 		}
+
+			avoidForce = Avoid(obstacles, (int)obstacles.size());
+			avoidForce = ScaleVector(avoidForce, 2.5f);
+			AddForce(avoidForce);
+
 	}
 
 	void ApplyForces()
 	{
 		// Add Forces
 		ApplyBehaviours();
-		AddForce(sf::Vector2f(0.f,gravity));
+		AddForce(sf::Vector2f(0.f,this->gravity));
+
 		AddForce(wind);
 
 		// Add Acceleration
@@ -251,7 +369,7 @@ public:
 		{
 			this->target = seektarget;
 			ApplyForces();
-			color = sf::Color(r, lifetime / 2, b, lifetime);
+			color = sf::Color(r, g, b, lifetime);
 			if(!steerBehaviour)
 				this->lifetime -= 1;
 			return 1;
@@ -265,8 +383,10 @@ public:
 	}
 };
 
-std::vector<Particle> particles;
-sf::VertexArray vertexarray(sf::Points, MAX_NUM_PARTICLES);
+std::vector<Particle> particlesQuads;
+std::vector<Particle> particlesPoints;
+sf::VertexArray vertexarray(sf::Quads,MAX_NUM_PARTICLES*4);
+sf::VertexArray vertexarrayPoints(sf::Points, MAX_NUM_PARTICLES*2);
 
 class Emitter
 {
@@ -275,43 +395,72 @@ private:
 	uint lastParticleInitialized = 0;
 	bool doFullSearch 	= false;  	// Set true when entire array has been searched for an inactive particle
 
-
 public:
 	bool maxxedOut 		= false;	// then set maxxedOut when can't find an inactive particle
+	bool quads;						// Quads or Points
 
-	Emitter(sf::RenderWindow& window) :
+	Emitter(sf::RenderWindow& window, bool _quads) :
 		mywindow(window)
 	{
 		// Initialize Arrays
-		for (uint i = 0; i < MAX_NUM_PARTICLES; i++)
+		if(_quads)
 		{
-			particles.push_back(Particle(mywindow));
+			this->quads = _quads;
+			for (uint i = 0; i < MAX_NUM_PARTICLES; i++)
+			{
+				particlesQuads.push_back(Particle(mywindow));
+				vertexarray[i*4].texCoords = (sf::Vector2f(0,0));
+				vertexarray[i*4+1].texCoords = (sf::Vector2f(64,0));
+				vertexarray[i*4+2].texCoords = (sf::Vector2f(64,64));
+				vertexarray[i*4+3].texCoords = (sf::Vector2f(0,64));
+			}
+		} else
+		{
+			this->quads = _quads;
+			for (uint i = 0; i < MAX_NUM_PARTICLES*2; i++)
+			{
+				particlesPoints.push_back(Particle(mywindow));
+			}
 		}
 	}
 
-	void Emit(uint posx, uint posy)
+	void EmitQuads(uint posx, uint posy)
 	{
 		if(!maxxedOut)
 		{
 			for (uint i = 0; i < numParticles; i++)
 			{
-				for (uint j = lastParticleInitialized; j < particles.size(); j++)
+				for (uint j = lastParticleInitialized; j < particlesQuads.size(); j++)
 				{
-					if (!particles[j].active)
+					if (!particlesQuads[j].active)
 					{
-						particles[j].Init(posx, posy);
-						vertexarray[j].position.x = posx;
-						vertexarray[j].position.y = posy;
-						vertexarray[j].color = particles[j].color;
+						particlesQuads[j].Init(posx, posy);
+
+						vertexarray[j*4].position.x = posx-particlesQuads[j].particleSize/2;
+						vertexarray[j*4].position.y = posy;
+						vertexarray[j*4].color = particlesQuads[j].color;
+
+						vertexarray[j*4+1].position.x = posx + particlesQuads[j].particleSize/2;
+						vertexarray[j*4+1].position.y = posy;
+						vertexarray[j*4+1].color = particlesQuads[j].color;
+
+						vertexarray[j*4+2].position.x = posx + particlesQuads[j].particleSize/2;
+						vertexarray[j*4+2].position.y = posy + particlesQuads[j].particleSize;
+						vertexarray[j*4+2].color = particlesQuads[j].color;
+
+						vertexarray[j*4+3].position.x = posx-particlesQuads[j].particleSize/2;
+						vertexarray[j*4+3].position.y = posy + particlesQuads[j].particleSize;
+						vertexarray[j*4+3].color = particlesQuads[j].color;
+
 						lastParticleInitialized = j;
 						doFullSearch = false;
 						break;
 					}
-					else if (j == (particles.size() - 1))
+					else if (j == (particlesQuads.size() - 1))
 					{
 						if(doFullSearch)
 							{
-								lastParticleInitialized = particles.size()-2;
+								lastParticleInitialized = particlesQuads.size()-2;
 								maxxedOut = true;
 							}
 							else
@@ -324,19 +473,85 @@ public:
 		}
 	}
 
-	void Update(sf::Vector2f seektarget)
+	void EmitPoints(uint posx, uint posy)
 	{
-		for (uint i = 0; i < particles.size(); i++)
+		if(!maxxedOut)
 		{
-			if (particles[i].active)
+			for (uint i = 0; i < numParticles; i++)
 			{
-				if (particles[i].Update(seektarget))
+				for (uint j = lastParticleInitialized; j < particlesPoints.size(); j++)
 				{
-					vertexarray[i].position = sf::Vector2f(particles[i].x, particles[i].y);
-					vertexarray[i].color = particles[i].color;
+					if (!particlesPoints[j].active)
+					{
+						particlesPoints[j].Init(posx, posy);
+
+						vertexarrayPoints[j].position.x = posx;
+						vertexarrayPoints[j].position.y = posy;
+						vertexarrayPoints[j].color = particlesPoints[j].color;
+
+
+						lastParticleInitialized = j;
+						doFullSearch = false;
+						break;
+					}
+					else if (j == (particlesPoints.size() - 1))
+					{
+						if(doFullSearch)
+							{
+								lastParticleInitialized = particlesPoints.size()-2;
+								maxxedOut = true;
+							}
+							else
+							lastParticleInitialized = 0;
+						doFullSearch = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	void UpdateQuads(sf::Vector2f seektarget)
+	{
+		for (uint i = 0; i < particlesQuads.size(); i++)
+		{
+			if (particlesQuads[i].active)
+			{
+				if (particlesQuads[i].Update(seektarget))
+				{
+					vertexarray[i*4].position = sf::Vector2f(particlesQuads[i].x - particlesQuads[i].particleSize/2, particlesQuads[i].y);
+					vertexarray[i*4+1].position = sf::Vector2f(particlesQuads[i].x + particlesQuads[i].particleSize/2, particlesQuads[i].y);
+					vertexarray[i*4+2].position = sf::Vector2f(particlesQuads[i].x + particlesQuads[i].particleSize/2, particlesQuads[i].y + particlesQuads[i].particleSize);
+					vertexarray[i*4+3].position = sf::Vector2f(particlesQuads[i].x - particlesQuads[i].particleSize/2, particlesQuads[i].y + particlesQuads[i].particleSize);
+					vertexarray[i*4].color = particlesQuads[i].color;
+					vertexarray[i*4+1].color = particlesQuads[i].color;
+					vertexarray[i*4+2].color = particlesQuads[i].color;
+					vertexarray[i*4+3].color = particlesQuads[i].color;
 				}
 				else
-					vertexarray[i].color = sf::Color::Black;
+				{
+					vertexarray[i*4].color = sf::Color::Transparent;
+					vertexarray[i*4+1].color = sf::Color::Transparent;
+					vertexarray[i*4+2].color = sf::Color::Transparent;
+					vertexarray[i*4+3].color = sf::Color::Transparent;
+				}
+			}
+		}
+	}
+
+	void UpdatePoints(sf::Vector2f seektarget)
+	{
+		for (uint i = 0; i < particlesPoints.size(); i++)
+		{
+			if (particlesPoints[i].active)
+			{
+				if (particlesPoints[i].Update(seektarget))
+				{
+					vertexarrayPoints[i].position = sf::Vector2f(particlesPoints[i].x, particlesPoints[i].y);
+					vertexarrayPoints[i].color = particlesPoints[i].color;
+				}
+				else
+					vertexarrayPoints[i].color = sf::Color::Transparent;
 			}
 		}
 	}
